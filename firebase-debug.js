@@ -9,19 +9,12 @@ if (typeof firebase === 'undefined') {
     console.log('✅ Firebase loaded successfully');
 }
 
-// Firebase Configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyBXx7EgHFlNp5GDJniLb9M9PQP3NeKdRgo",
-    authDomain: "vincesplanningpoker.firebaseapp.com",
-    databaseURL: "https://vincesplanningpoker-default-rtdb.firebaseio.com",
-    projectId: "vincesplanningpoker",
-    storageBucket: "vincesplanningpoker.firebasestorage.app",
-    messagingSenderId: "643490045734",
-    appId: "1:643490045734:web:63b08352e7c82a0d3eabe7",
-    measurementId: "G-HFZ56ZN4ET"
-};
-
-console.log('🔧 Firebase Config:', firebaseConfig);
+// Check if config is already available
+if (typeof firebaseConfig !== 'undefined') {
+    console.log('✅ Firebase config already available');
+} else {
+    console.error('❌ Firebase config not available');
+}
 
 try {
     // Initialize Firebase

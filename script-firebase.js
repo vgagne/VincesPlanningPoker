@@ -257,6 +257,9 @@ class PlanningPokerApp {
                 this.calculateAndDisplayMode();
             }
             
+            // CRITICAL: Update participant cards to show/hide votes
+            this.updateParticipantsList();
+            
             console.log('👁️ Initial votes revealed:', this.votesRevealed);
         });
         
@@ -330,6 +333,9 @@ class PlanningPokerApp {
             if (this.votesRevealed) {
                 this.calculateAndDisplayMode();
             }
+            
+            // CRITICAL: Update participant cards to show/hide votes
+            this.updateParticipantsList();
             
             console.log('👁️ Votes revealed updated:', this.votesRevealed);
         });

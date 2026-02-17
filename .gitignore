@@ -86,3 +86,7 @@ jspm_packages/
 
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
+
+# Firebase config with API keys (use template instead)
+firebase-config.js
+env.js

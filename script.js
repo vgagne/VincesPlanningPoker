@@ -259,6 +259,32 @@ class PlanningPokerApp {
             this.selectItem(this.items[0]);
         }
     }
+    
+    addSampleItems() {
+        const sampleItems = [
+            'User login functionality',
+            'Database optimization',
+            'Mobile responsive design',
+            'API integration',
+            'Security improvements'
+        ];
+        
+        sampleItems.forEach(item => {
+            this.items.push({
+                id: Date.now() + Math.random(),
+                description: item,
+                status: 'pending'
+            });
+        });
+        
+        // Select first item
+        if (this.items.length > 0) {
+            this.selectItem(this.items[0]);
+        }
+        
+        this.updateItemsList();
+    }
+    
     generateCards() {
         const cardsGrid = document.getElementById('cardsGrid');
         cardsGrid.innerHTML = '';

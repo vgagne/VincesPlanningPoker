@@ -1,0 +1,3 @@
+Primary: #A6192E
+Secondary: #FFFFFF
+Tertiary: #262626

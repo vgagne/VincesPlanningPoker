@@ -108,7 +108,13 @@ class PlanningPokerApp {
         this.deckType = deckType;
         
         // Initialize Firebase manager
-        this.firebaseManager = new FirebaseSessionManager(this.sessionId);
+        if (typeof FirebaseSessionManager !== 'undefined') {
+            this.firebaseManager = new FirebaseSessionManager(this.sessionId);
+        } else {
+            console.error('❌ FirebaseSessionManager not defined - check firebase-config.js');
+            this.showToast('Firebase not properly initialized', 'error');
+            return;
+        }
         
         // Add admin as first participant
         this.addParticipantToFirebase(userName, true);
@@ -140,7 +146,13 @@ class PlanningPokerApp {
         this.isAdmin = false;
         
         // Initialize Firebase manager
-        this.firebaseManager = new FirebaseSessionManager(this.sessionId);
+        if (typeof FirebaseSessionManager !== 'undefined') {
+            this.firebaseManager = new FirebaseSessionManager(this.sessionId);
+        } else {
+            console.error('❌ FirebaseSessionManager not defined - check firebase-config.js');
+            this.showToast('Firebase not properly initialized', 'error');
+            return;
+        }
         
         // Add participant to Firebase
         this.addParticipantToFirebase(userName, false);

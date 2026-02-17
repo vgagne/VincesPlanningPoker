@@ -500,36 +500,36 @@ class PlanningPokerApp {
             const participantElement = document.createElement('div');
             participantElement.className = 'participant-card';
             
-            // Get vote value if exists
+            // Get vote value
             const voteValue = this.votes.has(name) ? this.votes.get(name) : null;
             const hasVoted = participant.hasVoted || voteValue !== null;
             
-            // Create dual-layer card structure
-            const voteCardHtml = `
-                <div class="vote-card-container">
-                    <!-- Base layer - always shows the vote value -->
-                    <div class="vote-card vote-value ${this.votesRevealed ? 'revealed' : 'hidden'}">
-                        ${voteValue || '-'}
-                    </div>
-                    <!-- Overlay layer - shows checkmark or empty state -->
-                    ${!this.votesRevealed ? `
-                        <div class="vote-card vote-overlay ${hasVoted ? 'voted' : 'empty'}">
-                            ${hasVoted ? '' : '-'}
-                        </div>
-                    ` : ''}
-                </div>
-            `;
+            // Simple card HTML with inline styles
+            let cardStyle = '';
+            let cardContent = '';
             
-            console.log(`� Card state for ${name}:`, {
-                voteValue,
-                hasVoted,
-                votesRevealed: this.votesRevealed
-            });
+            if (this.votesRevealed && voteValue) {
+                // REVEALED STATE: Light grey background, green text
+                const isPass = voteValue === 'Pass';
+                cardStyle = `background: linear-gradient(145deg, #e9ecef, #dee2e6); border: 2px solid #6c757d; color: ${isPass ? '#6c757d' : '#28a745'}; font-size: 1.5rem; font-weight: 900; width: 80px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); margin: 0 auto; font-style: ${isPass ? 'italic' : 'normal'};`;
+                cardContent = voteValue;
+                console.log(`✅ REVEALED: ${name} = ${voteValue}`);
+            } else if (hasVoted) {
+                // VOTED (hidden): Dark grey with green checkmark
+                cardStyle = `background: linear-gradient(145deg, #6c757d, #495057); border: 2px solid #495057; color: #28a745; width: 80px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.15); margin: 0 auto; font-size: 1.5rem; font-weight: 900;`;
+                cardContent = '✓';
+                console.log(`🔒 HIDDEN: ${name} has voted`);
+            } else {
+                // NOT VOTED: White with dash
+                cardStyle = `background: linear-gradient(145deg, #ffffff, #f0f0f0); border: 2px solid #dee2e6; color: #6c757d; width: 80px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.15); margin: 0 auto; font-size: 1.25rem; font-weight: 700;`;
+                cardContent = '-';
+                console.log(`⭕ EMPTY: ${name} has not voted`);
+            }
             
             participantElement.innerHTML = `
                 <div class="participant-name">${name}</div>
                 ${participant.isAdmin ? '<div class="participant-role">Admin</div>' : ''}
-                ${voteCardHtml}
+                <div class="vote-card" style="${cardStyle}">${cardContent}</div>
             `;
             
             participantsGrid.appendChild(participantElement);

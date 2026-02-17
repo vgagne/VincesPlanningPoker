@@ -25,6 +25,17 @@ class PlanningPokerApp {
         this.checkUrlForSession();
     }
     
+    // XSS Protection: Sanitize user input to prevent HTML injection
+    sanitizeHTML(str) {
+        if (!str) return '';
+        return str.replace(/&/g, '&amp;')
+                  .replace(/</g, '&lt;')
+                  .replace(/>/g, '&gt;')
+                  .replace(/"/g, '&quot;')
+                  .replace(/'/g, '&#x27;')
+                  .replace(/\//g, '&#x2F;');
+    }
+    
     initializeEventListeners() {
         // Start view buttons
         document.getElementById('createSessionBtn').addEventListener('click', () => this.createSession());
@@ -240,8 +251,9 @@ class PlanningPokerApp {
             this.currentItem = snapshot.val();
             
             if (this.currentItem) {
+                const safeDescription = this.sanitizeHTML(this.currentItem.description);
                 document.getElementById('votingItemDisplay').innerHTML = `
-                    <p class="text-lg font-semibold text-red-800">${this.currentItem.description}</p>
+                    <p class="text-lg font-semibold text-red-800">${safeDescription}</p>
                     <p class="text-sm text-red-600 mt-1">Status: ${this.getItemStatusText(this.currentItem.status)}</p>
                 `;
             }
@@ -316,8 +328,9 @@ class PlanningPokerApp {
             this.currentItem = snapshot.val();
             
             if (this.currentItem) {
+                const safeDescription = this.sanitizeHTML(this.currentItem.description);
                 document.getElementById('votingItemDisplay').innerHTML = `
-                    <p class="text-lg font-semibold text-red-800">${this.currentItem.description}</p>
+                    <p class="text-lg font-semibold text-red-800">${safeDescription}</p>
                     <p class="text-sm text-red-600 mt-1">Status: ${this.getItemStatusText(this.currentItem.status)}</p>
                 `;
             }
@@ -477,7 +490,7 @@ class PlanningPokerApp {
             }
             
             itemElement.innerHTML = `
-                <div class="item-title text-ellipsis">${item.description}</div>
+                <div class="item-title text-ellipsis">${this.sanitizeHTML(item.description)}</div>
                 <div class="item-status">${this.getItemStatusText(item.status)}</div>
             `;
             
@@ -527,7 +540,7 @@ class PlanningPokerApp {
             }
             
             participantElement.innerHTML = `
-                <div class="participant-name">${name}</div>
+                <div class="participant-name">${this.sanitizeHTML(name)}</div>
                 ${participant.isAdmin ? '<div class="participant-role">Admin</div>' : ''}
                 <div class="vote-card" style="${cardStyle}">${cardContent}</div>
             `;

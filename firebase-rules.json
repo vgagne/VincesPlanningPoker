@@ -1,7 +1,7 @@
 {
   "rules": {
-    ".read": true,
-    ".write": true,
+    ".read": false,
+    ".write": false,
     "sessions": {
       "$sessionId": {
         ".read": true,
@@ -9,19 +9,22 @@
         "participants": {
           "$participantId": {
             ".read": true,
-            ".write": true
+            ".write": true,
+            ".validate": "newData.hasChildren(['name', 'isAdmin', 'hasVoted', 'joinedAt']) || data.exists()"
           }
         },
         "items": {
           "$itemId": {
             ".read": true,
-            ".write": true
+            ".write": true,
+            ".validate": "newData.hasChild('description') || data.exists()"
           }
         },
         "votes": {
           "$voteId": {
             ".read": true,
-            ".write": true
+            ".write": true,
+            ".validate": "newData.isString()"
           }
         },
         "currentItem": {
@@ -30,7 +33,8 @@
         },
         "votesRevealed": {
           ".read": true,
-          ".write": true
+          ".write": true,
+          ".validate": "newData.isBoolean()"
         }
       }
     },

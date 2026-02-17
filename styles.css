@@ -1,0 +1,399 @@
+/* Custom styles for Vince's Planning Poker */
+
+:root {
+    --primary-color: #A6192E;
+    --primary-dark: #841424;
+    --primary-darker: #6b0f1d;
+    --secondary-color: #FFFFFF;
+    --tertiary-color: #262626;
+    --accent-color: #f8f9fa;
+    --border-color: #dee2e6;
+    --text-muted: #6c757d;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+}
+
+/* Card animations and hover effects */
+.card {
+    @apply bg-white border-2 border-gray-300 rounded-lg p-4 text-center cursor-pointer transition-all duration-200 hover:border-red-700 hover:shadow-lg transform hover:-translate-y-1;
+    position: relative;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    border: 1px solid rgba(166, 25, 46, 0.1);
+    border-radius: 8px;
+    pointer-events: none;
+}
+
+.card .card-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--tertiary-color);
+    position: relative;
+    z-index: 1;
+}
+
+.card.selected {
+    @apply border-red-700 shadow-lg transform scale-105;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    border-color: var(--primary-color);
+}
+
+.card.selected .card-value {
+    color: white;
+}
+
+.card.revealed {
+    @apply bg-green-100 border-green-500;
+}
+
+.card.disabled {
+    @apply opacity-50 cursor-not-allowed hover:transform-none hover:shadow-none;
+}
+
+.card.pass {
+    background: linear-gradient(135deg, var(--text-muted) 0%, var(--tertiary-color) 100%);
+    border-color: var(--tertiary-color);
+}
+
+.card.pass .card-value {
+    color: white;
+}
+
+.card.pass.selected {
+    background: linear-gradient(135deg, var(--tertiary-color) 0%, #000000 100%);
+}
+
+/* Participant cards */
+.participant-card {
+    @apply bg-white rounded-lg p-4 text-center border-2 border-gray-200 transition-all duration-200;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+}
+
+.participant-card.has-voted {
+    @apply border-green-500 bg-green-50;
+}
+
+.participant-card .participant-name {
+    @apply font-semibold text-sm mb-2;
+    color: var(--tertiary-color);
+}
+
+.participant-card .participant-role {
+    @apply text-xs mb-3;
+    color: var(--primary-color);
+}
+
+.participant-card .vote-card {
+    @apply bg-white border-2 border-gray-300 rounded-lg p-2 mx-auto;
+    width: 60px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.2rem;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border-radius: 8px;
+}
+
+.participant-card .vote-card.hidden {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.participant-card .vote-card.empty {
+    background: #f8f9fa;
+    border-color: var(--border-color);
+    color: var(--text-muted);
+}
+
+/* Item list styling */
+.item-card {
+    @apply bg-white border border-gray-200 rounded-lg p-3 cursor-pointer transition-all duration-200 hover:border-red-700 hover:bg-red-50;
+}
+
+.item-card.active {
+    @apply bg-red-100 border-red-700 border-2;
+}
+
+.item-card .item-title {
+    @apply font-semibold text-gray-800;
+}
+
+.item-card .item-status {
+    @apply text-xs text-gray-500 mt-1;
+}
+
+/* Button animations */
+.btn-primary {
+    background-color: var(--primary-color);
+    @apply text-white font-bold py-2 px-4 rounded transition duration-200 transform hover:scale-105;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+}
+
+.btn-success {
+    @apply bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-200 transform hover:scale-105;
+}
+
+.btn-warning {
+    @apply bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded transition duration-200 transform hover:scale-105;
+}
+
+.btn-danger {
+    @apply bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-200 transform hover:scale-105;
+}
+
+/* Toast notification animation */
+.toast-enter {
+    animation: slideInUp 0.3s ease-out;
+}
+
+.toast-exit {
+    animation: slideOutDown 0.3s ease-in;
+}
+
+@keyframes slideInUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutDown {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+}
+
+/* Card flip animation */
+.card-flip {
+    animation: flipCard 0.6s ease-in-out;
+}
+
+@keyframes flipCard {
+    0% {
+        transform: rotateY(0);
+    }
+    50% {
+        transform: rotateY(90deg);
+    }
+    100% {
+        transform: rotateY(0);
+    }
+}
+
+/* Pulse animation for important elements */
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(166, 25, 46, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(166, 25, 46, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(166, 25, 46, 0);
+    }
+}
+
+/* Loading spinner */
+.spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .cards-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .participants-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .participants-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Session link styling */
+.session-link {
+    @apply bg-red-50 border border-red-200 rounded-lg p-3 font-mono text-sm break-all;
+}
+
+/* Admin panel specific styles */
+.admin-section {
+    @apply bg-gray-50 rounded-lg p-4 mb-4;
+}
+
+.admin-section h4 {
+    @apply font-semibold text-gray-700 mb-2;
+}
+
+/* Voting status indicators */
+.voting-status {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+}
+
+.voting-status.waiting {
+    @apply bg-yellow-100 text-yellow-800;
+}
+
+.voting-status.voting {
+    @apply bg-red-100 text-red-800;
+}
+
+.voting-status.completed {
+    @apply bg-green-100 text-green-800;
+}
+
+/* Card value display */
+.card-value {
+    @apply text-2xl font-bold;
+}
+
+.card-label {
+    @apply text-xs text-gray-500 mt-1;
+}
+
+/* Smooth transitions */
+.smooth-transition {
+    transition: all 0.3s ease;
+}
+
+/* Focus styles for accessibility */
+.focus-ring:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Hidden elements */
+.hidden {
+    display: none !important;
+}
+
+/* Utility classes */
+.text-ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Admin panel collapsible */
+#adminPanelContent {
+    max-height: 1000px;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+#adminPanelContent.collapsed {
+    max-height: 0;
+}
+
+/* Vote statistics */
+.vote-statistics {
+    @apply bg-white rounded-lg shadow-md p-4;
+    border: 2px solid var(--primary-color);
+}
+
+.vote-statistics .mode-value {
+    @apply text-3xl font-bold;
+    color: var(--primary-color);
+}
+
+/* Participant grid improvements */
+.participants-grid {
+    gap: 1rem;
+}
+
+/* Card deck improvements */
+.cards-grid {
+    gap: 0.75rem;
+}
+
+/* Focus states */
+.card:focus {
+    outline: 3px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.participant-card:focus {
+    outline: 3px solid var(--primary-color);
+    outline-offset: 2px;
+}

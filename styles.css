@@ -102,10 +102,22 @@
     color: var(--primary-color);
 }
 
-.participant-card .vote-card {
-    @apply bg-white border-2 border-gray-800 rounded-lg p-2 mx-auto;
+/* Dual-layer vote card container */
+.participant-card .vote-card-container {
+    position: relative;
     width: 80px;
     height: 50px;
+    margin: 0 auto;
+}
+
+/* Base vote card layer - always contains the vote value */
+.participant-card .vote-card.vote-value {
+    @apply bg-white border-2 border-gray-800 rounded-lg p-2;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -114,20 +126,64 @@
     color: var(--tertiary-color);
     box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     border-radius: 8px;
-    position: relative;
     background: linear-gradient(145deg, #ffffff, #f0f0f0);
     border-style: solid;
     transition: all 0.3s ease;
+    z-index: 1;
 }
 
-/* Voted state - grey with green checkmark */
-.participant-card .vote-card.voted {
+/* Revealed state - light grey with green text */
+.participant-card .vote-card.vote-value.revealed {
+    background: linear-gradient(145deg, #e9ecef, #dee2e6) !important;
+    border-color: #6c757d !important;
+    color: #28a745 !important;
+    font-size: 1.5rem !important;
+    font-weight: 900 !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+}
+
+.participant-card .vote-card.vote-value.revealed.pass {
+    color: #6c757d !important;
+    font-style: italic !important;
+    font-weight: 700 !important;
+}
+
+/* Hidden state - transparent but still present */
+.participant-card .vote-card.vote-value.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Overlay layer - covers the base layer when not revealed */
+.participant-card .vote-card.vote-overlay {
+    @apply bg-white border-2 border-gray-800 rounded-lg p-2;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--tertiary-color);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    border-radius: 8px;
+    background: linear-gradient(145deg, #ffffff, #f0f0f0);
+    border-style: solid;
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+/* Voted overlay state - grey with green checkmark */
+.participant-card .vote-card.vote-overlay.voted {
     background: linear-gradient(145deg, #6c757d, #495057);
     border-color: #495057;
     color: transparent;
 }
 
-.participant-card .vote-card.voted::after {
+.participant-card .vote-card.vote-overlay.voted::after {
     content: '✓';
     position: absolute;
     color: #28a745;
@@ -136,23 +192,11 @@
     text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
-/* Revealed state - show actual vote value on grey background */
-.participant-card .vote-card.revealed {
-    background: linear-gradient(145deg, #6c757d, #495057) !important;
-    border-color: #495057 !important;
-    color: #28a745 !important;
-    font-size: 1.5rem !important;
-    font-weight: 900 !important;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
-    border-width: 2px !important;
-}
-
-.participant-card .vote-card.revealed.pass {
-    background: linear-gradient(145deg, #6c757d, #495057) !important;
-    border-color: #495057 !important;
-    color: #6c757d !important;
-    font-style: italic !important;
-    font-weight: 700 !important;
+/* Empty overlay state */
+.participant-card .vote-card.vote-overlay.empty {
+    background: #f8f9fa;
+    border-color: var(--border-color);
+    color: var(--text-muted);
 }
 
 .participant-card .vote-card.hidden {

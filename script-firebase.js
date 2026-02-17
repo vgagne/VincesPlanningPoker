@@ -484,27 +484,41 @@ class PlanningPokerApp {
         const participantsGrid = document.getElementById('participantsGrid');
         participantsGrid.innerHTML = '';
         
+        console.log('🔄 Updating participants list:', {
+            votesRevealed: this.votesRevealed,
+            votes: Array.from(this.votes.entries()),
+            participants: Array.from(this.participants.entries())
+        });
+        
         this.participants.forEach((participant, name) => {
             const participantElement = document.createElement('div');
             participantElement.className = 'participant-card';
             
-            let voteCardHtml = '';
-            let voteCardClass = 'vote-card';
+            // Get vote value if exists
+            const voteValue = this.votes.has(name) ? this.votes.get(name) : null;
+            const hasVoted = participant.hasVoted || voteValue !== null;
             
-            if (this.votesRevealed && this.votes.has(name)) {
-                const voteValue = this.votes.get(name);
-                voteCardClass += ' revealed';
-                if (voteValue === 'Pass') {
-                    voteCardClass += ' pass';
-                }
-                voteCardHtml = `<div class="${voteCardClass}">${voteValue}</div>`;
-            } else if (participant.hasVoted) {
-                voteCardClass += ' voted';
-                voteCardHtml = `<div class="${voteCardClass}"></div>`;
-            } else {
-                voteCardClass += ' empty';
-                voteCardHtml = `<div class="${voteCardClass}">-</div>`;
-            }
+            // Create dual-layer card structure
+            const voteCardHtml = `
+                <div class="vote-card-container">
+                    <!-- Base layer - always shows the vote value -->
+                    <div class="vote-card vote-value ${this.votesRevealed ? 'revealed' : 'hidden'}">
+                        ${voteValue || '-'}
+                    </div>
+                    <!-- Overlay layer - shows checkmark or empty state -->
+                    ${!this.votesRevealed ? `
+                        <div class="vote-card vote-overlay ${hasVoted ? 'voted' : 'empty'}">
+                            ${hasVoted ? '' : '-'}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            console.log(`� Card state for ${name}:`, {
+                voteValue,
+                hasVoted,
+                votesRevealed: this.votesRevealed
+            });
             
             participantElement.innerHTML = `
                 <div class="participant-name">${name}</div>

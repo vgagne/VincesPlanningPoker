@@ -1,4 +1,4 @@
-// Vince's Planning Poker - Firebase-enabled JavaScript
+// Vince's Planning Poker - Main JavaScript
 
 class PlanningPokerApp {
     constructor() {
@@ -12,7 +12,10 @@ class PlanningPokerApp {
         this.deckType = 'modified';
         this.selectedCard = null;
         this.votesRevealed = false;
-        this.firebaseManager = null;
+        
+        // Initialize localStorage sync
+        this.storageKey = 'planning_poker_session';
+        this.syncInterval = null;
         
         this.cardDecks = {
             modified: ['0', '½', '1', '2', '3', '5', '8', '13', '20', '40', '100'],
@@ -23,6 +26,7 @@ class PlanningPokerApp {
         
         this.initializeEventListeners();
         this.checkUrlForSession();
+        this.startStorageSync();
     }
     
     initializeEventListeners() {
@@ -55,6 +59,82 @@ class PlanningPokerApp {
         document.getElementById('newItemInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.addItem();
         });
+    }
+    
+    // LocalStorage sync methods
+    startStorageSync() {
+        // Listen for storage events from other tabs
+        window.addEventListener('storage', (e) => {
+            if (e.key === this.storageKey && e.newValue) {
+                this.loadFromStorage();
+            }
+        });
+        
+        // Periodic sync every 1 second
+        this.syncInterval = setInterval(() => {
+            this.saveToStorage();
+        }, 1000);
+    }
+    
+    saveToStorage() {
+        if (!this.sessionId) return;
+        
+        const sessionData = {
+            sessionId: this.sessionId,
+            participants: Array.from(this.participants.entries()),
+            items: this.items,
+            votes: Array.from(this.votes.entries()),
+            deckType: this.deckType,
+            currentItem: this.currentItem,
+            votesRevealed: this.votesRevealed,
+            lastUpdated: Date.now()
+        };
+        
+        localStorage.setItem(this.storageKey, JSON.stringify(sessionData));
+    }
+    
+    loadFromStorage() {
+        const storedData = localStorage.getItem(this.storageKey);
+        if (!storedData) return;
+        
+        try {
+            const sessionData = JSON.parse(storedData);
+            
+            // Only load if it's the same session
+            if (sessionData.sessionId !== this.sessionId) return;
+            
+            // Update local data
+            this.participants = new Map(sessionData.participants || []);
+            this.items = sessionData.items || [];
+            this.votes = new Map(sessionData.votes || []);
+            this.deckType = sessionData.deckType || 'modified';
+            this.currentItem = sessionData.currentItem;
+            this.votesRevealed = sessionData.votesRevealed || false;
+            
+            // Update UI
+            this.updateParticipantsList();
+            this.updateItemsList();
+            
+            if (this.currentItem) {
+                document.getElementById('votingItemDisplay').innerHTML = `
+                    <p class="text-lg font-semibold text-red-800">${this.currentItem.description}</p>
+                    <p class="text-sm text-red-600 mt-1">Status: ${this.getItemStatusText(this.currentItem.status)}</p>
+                `;
+            }
+            
+            if (this.votesRevealed) {
+                this.calculateAndDisplayMode();
+            }
+            
+        } catch (error) {
+            console.error('Error loading from storage:', error);
+        }
+    }
+    
+    stopStorageSync() {
+        if (this.syncInterval) {
+            clearInterval(this.syncInterval);
+        }
     }
     
     toggleMode() {
@@ -107,20 +187,17 @@ class PlanningPokerApp {
         this.isAdmin = true;
         this.deckType = deckType;
         
-        // Initialize Firebase manager
-        this.firebaseManager = new FirebaseSessionManager(this.sessionId);
-        
         // Add admin as first participant
-        this.addParticipantToFirebase(userName, true);
+        this.participants.set(userName, { name: userName, isAdmin: true, hasVoted: false });
         
         // Update URL
         const url = `${window.location.origin}${window.location.pathname}?session=${this.sessionId}`;
         window.history.pushState({}, '', url);
         
         this.startSession();
+        this.saveToStorage(); // Save new session
         this.showToast('Session created successfully!', 'success');
     }
-    
     joinSession() {
         const userName = document.getElementById('userName').value.trim();
         const sessionId = document.getElementById('sessionIdInput').value.trim().toUpperCase();
@@ -139,24 +216,21 @@ class PlanningPokerApp {
         this.userName = userName;
         this.isAdmin = false;
         
-        // Initialize Firebase manager
-        this.firebaseManager = new FirebaseSessionManager(this.sessionId);
+        // Try to load existing session data
+        this.loadFromStorage();
         
-        // Add participant to Firebase
-        this.addParticipantToFirebase(userName, false);
+        // Add participant if not already in session
+        if (!this.participants.has(userName)) {
+            this.participants.set(userName, { name: userName, isAdmin: false, hasVoted: false });
+        }
         
         // Update URL
         const url = `${window.location.origin}${window.location.pathname}?session=${this.sessionId}`;
         window.history.pushState({}, '', url);
         
         this.startSession();
+        this.saveToStorage(); // Save the new participant
         this.showToast('Joined session successfully!', 'success');
-    }
-    
-    addParticipantToFirebase(name, isAdmin = false) {
-        if (this.firebaseManager) {
-            this.firebaseManager.addParticipant(name, isAdmin);
-        }
     }
     
     startSession() {
@@ -173,78 +247,42 @@ class PlanningPokerApp {
             document.getElementById('adminPanel').classList.add('hidden');
         }
         
-        // Initialize Firebase listeners
-        this.setupFirebaseListeners();
-        
         // Initialize cards
         this.generateCards();
         
         // Update displays
         this.updateParticipantsList();
         this.updateItemsList();
+        
+        // Allow participants to see and select items
+        if (!this.isAdmin && this.items.length > 0) {
+            this.selectItem(this.items[0]);
+        }
     }
     
-    setupFirebaseListeners() {
-        if (!this.firebaseManager) return;
+    addSampleItems() {
+        const sampleItems = [
+            'User login functionality',
+            'Database optimization',
+            'Mobile responsive design',
+            'API integration',
+            'Security improvements'
+        ];
         
-        // Listen to participants changes
-        this.firebaseManager.onParticipantsChange((snapshot) => {
-            const participants = snapshot.val() || {};
-            this.participants = new Map();
-            
-            Object.entries(participants).forEach(([name, data]) => {
-                this.participants.set(name, data);
+        sampleItems.forEach(item => {
+            this.items.push({
+                id: Date.now() + Math.random(),
+                description: item,
+                status: 'pending'
             });
-            
-            this.updateParticipantsList();
         });
         
-        // Listen to items changes
-        this.firebaseManager.onItemsChange((snapshot) => {
-            const items = snapshot.val() || {};
-            this.items = [];
-            
-            Object.entries(items).forEach(([id, data]) => {
-                this.items.push({ id, ...data });
-            });
-            
-            this.updateItemsList();
-        });
+        // Select first item
+        if (this.items.length > 0) {
+            this.selectItem(this.items[0]);
+        }
         
-        // Listen to votes changes
-        this.firebaseManager.onVotesChange((snapshot) => {
-            const votes = snapshot.val() || {};
-            this.votes = new Map();
-            
-            Object.entries(votes).forEach(([userName, voteValue]) => {
-                this.votes.set(userName, voteValue);
-            });
-            
-            this.updateParticipantsList();
-        });
-        
-        // Listen to current item changes
-        this.firebaseManager.onCurrentItemChange((snapshot) => {
-            this.currentItem = snapshot.val();
-            
-            if (this.currentItem) {
-                document.getElementById('votingItemDisplay').innerHTML = `
-                    <p class="text-lg font-semibold text-red-800">${this.currentItem.description}</p>
-                    <p class="text-sm text-red-600 mt-1">Status: ${this.getItemStatusText(this.currentItem.status)}</p>
-                `;
-            }
-            
-            this.updateItemsList();
-        });
-        
-        // Listen to votes revealed changes
-        this.firebaseManager.onVotesRevealedChange((snapshot) => {
-            this.votesRevealed = snapshot.val() || false;
-            
-            if (this.votesRevealed) {
-                this.calculateAndDisplayMode();
-            }
-        });
+        this.updateItemsList();
     }
     
     generateCards() {
@@ -293,12 +331,12 @@ class PlanningPokerApp {
         document.getElementById('selectedCardDisplay').classList.remove('hidden');
         document.getElementById('selectedCard').textContent = value;
         
-        // Record vote in Firebase
-        if (this.firebaseManager) {
-            this.firebaseManager.setVote(this.userName, value);
-            this.firebaseManager.updateParticipant(this.userName, { hasVoted: true });
-        }
+        // Record vote
+        this.votes.set(this.userName, value);
+        this.participants.get(this.userName).hasVoted = true;
         
+        this.updateParticipantsList();
+        this.saveToStorage(); // Save the vote
         this.showToast('Vote recorded!', 'success');
     }
     
@@ -311,13 +349,14 @@ class PlanningPokerApp {
         }
         
         const newItem = {
+            id: Date.now(),
             description: itemDescription,
             status: 'pending'
         };
         
-        if (this.firebaseManager) {
-            this.firebaseManager.addItem(newItem);
-        }
+        this.items.push(newItem);
+        this.updateItemsList();
+        this.saveToStorage(); // Save the new item
         
         // Clear input
         document.getElementById('newItemInput').value = '';
@@ -336,21 +375,24 @@ class PlanningPokerApp {
             return;
         }
         
-        // Update Firebase
-        if (this.firebaseManager) {
-            this.firebaseManager.setCurrentItem(item);
-            this.firebaseManager.setVotesRevealed(false);
-            
-            // Clear all votes
-            this.participants.forEach((participant, name) => {
-                this.firebaseManager.updateParticipant(name, { hasVoted: false });
-                this.firebaseManager.removeVote(name);
-            });
-        }
-        
-        // Reset local state
+        this.currentItem = item;
         this.selectedCard = null;
         this.votesRevealed = false;
+        
+        // Clear votes
+        this.votes.clear();
+        this.participants.forEach(participant => {
+            participant.hasVoted = false;
+        });
+        
+        // Update UI
+        document.getElementById('votingItemDisplay').innerHTML = `
+            <p class="text-lg font-semibold text-red-800">${item.description}</p>
+            <p class="text-sm text-red-600 mt-1">Status: ${this.getItemStatusText(item.status)}</p>
+        `;
+        
+        // Update items list to show active item
+        this.updateItemsList();
         
         // Reset cards
         document.querySelectorAll('.card').forEach(card => {
@@ -360,6 +402,9 @@ class PlanningPokerApp {
         // Hide selected card display and stats
         document.getElementById('selectedCardDisplay').classList.add('hidden');
         document.getElementById('voteStats').classList.add('hidden');
+        
+        // Update participants
+        this.updateParticipantsList();
     }
     
     getItemStatusText(status) {
@@ -435,90 +480,105 @@ class PlanningPokerApp {
             return;
         }
         
-        // Update Firebase
-        if (this.firebaseManager) {
-            this.firebaseManager.setVotesRevealed(true);
-            
-            // Update item status
-            const updatedItem = { ...this.currentItem, status: 'completed' };
-            this.firebaseManager.updateItem(this.currentItem.id, updatedItem);
-        }
+        this.votesRevealed = true;
         
         // Add flip animation to cards
         document.querySelectorAll('.card').forEach(card => {
             card.classList.add('card-flip');
         });
         
-        this.showToast('Votes revealed!', 'success');
+        // Update current item status
+        if (this.currentItem) {
+            this.currentItem.status = 'completed';
+        }
+        
+        // Calculate and display mode
+        this.calculateAndDisplayMode();
+        
+        this.updateParticipantsList();
+        this.updateItemsList();
+        this.saveToStorage(); // Save the revealed state
+        
+        // Calculate statistics
+        const voteValues = Array.from(this.votes.values());
+        const uniqueVotes = [...new Set(voteValues)];
+        
+        let message = `Votes revealed! `;
+        if (uniqueVotes.length === 1) {
+            message += `Consensus: ${uniqueVotes[0]}`;
+        } else {
+            message += `Votes: ${voteValues.join(', ')}`;
+        }
+        
+        this.showToast(message, 'success');
     }
     
     calculateAndDisplayMode() {
         const voteValues = Array.from(this.votes.values());
-        const validVotes = voteValues.filter(vote => vote !== 'Pass');
         
-        if (validVotes.length === 0) {
+        if (voteValues.length === 0) {
             document.getElementById('voteStats').classList.add('hidden');
             return;
         }
         
-        // Calculate mode (most frequent value)
-        const voteCounts = {};
-        validVotes.forEach(vote => {
-            voteCounts[vote] = (voteCounts[vote] || 0) + 1;
+        // Count frequency of each vote
+        const frequency = {};
+        voteValues.forEach(vote => {
+            frequency[vote] = (frequency[vote] || 0) + 1;
         });
         
-        let mode = null;
+        // Find the mode(s)
         let maxCount = 0;
+        let modes = [];
         
-        Object.entries(voteCounts).forEach(([vote, count]) => {
+        for (const [vote, count] of Object.entries(frequency)) {
             if (count > maxCount) {
                 maxCount = count;
-                mode = vote;
-            }
-        });
-        
-        // Check for ties
-        const modes = Object.entries(voteCounts)
-            .filter(([_, count]) => count === maxCount)
-            .map(([vote, _]) => vote);
-        
-        let result;
-        if (modes.length === 1) {
-            result = mode;
-        } else {
-            // Calculate median for ties
-            const sortedVotes = validVotes.sort((a, b) => {
-                const numA = parseFloat(a) || 0;
-                const numB = parseFloat(b) || 0;
-                return numA - numB;
-            });
-            
-            const mid = Math.floor(sortedVotes.length / 2);
-            if (sortedVotes.length % 2 === 0) {
-                result = (parseFloat(sortedVotes[mid - 1]) + parseFloat(sortedVotes[mid])) / 2;
-            } else {
-                result = sortedVotes[mid];
+                modes = [vote];
+            } else if (count === maxCount) {
+                modes.push(vote);
             }
         }
         
-        // Display statistics
-        document.getElementById('voteStats').classList.remove('hidden');
-        document.getElementById('voteStats').innerHTML = `
-            <div class="stats-content">
-                <div class="stat-item">
-                    <div class="stat-label">Result:</div>
-                    <div class="stat-value">${result}</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Votes:</div>
-                    <div class="stat-value">${validVotes.length}</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Pass:</div>
-                    <div class="stat-value">${voteValues.length - validVotes.length}</div>
-                </div>
-            </div>
-        `;
+        // Display result
+        const voteStatsElement = document.getElementById('voteStats');
+        const modeValueElement = document.getElementById('modeValue');
+        
+        voteStatsElement.classList.remove('hidden');
+        
+        if (modes.length === 1) {
+            modeValueElement.textContent = modes[0];
+        } else {
+            // Multiple modes - calculate median
+            const numericModes = modes
+                .filter(mode => mode !== 'Pass' && !isNaN(parseFloat(mode)))
+                .map(mode => parseFloat(mode))
+                .sort((a, b) => a - b);
+            
+            if (numericModes.length > 0) {
+                const mid = Math.floor(numericModes.length / 2);
+                const median = numericModes.length % 2 === 0
+                    ? (numericModes[mid - 1] + numericModes[mid]) / 2
+                    : numericModes[mid];
+                modeValueElement.textContent = median;
+            } else {
+                modeValueElement.textContent = 'Tie: ' + modes.join(', ');
+            }
+        }
+    }
+    
+    toggleAdminPanel() {
+        const content = document.getElementById('adminPanelContent');
+        const toggle = document.getElementById('toggleAdminPanel');
+        const icon = toggle.querySelector('i');
+        
+        if (content.classList.contains('collapsed')) {
+            content.classList.remove('collapsed');
+            icon.className = 'fas fa-chevron-down';
+        } else {
+            content.classList.add('collapsed');
+            icon.className = 'fas fa-chevron-up';
+        }
     }
     
     resetVotes() {
@@ -527,35 +587,35 @@ class PlanningPokerApp {
             return;
         }
         
-        // Update Firebase
-        if (this.firebaseManager) {
-            this.firebaseManager.setVotesRevealed(false);
-            
-            // Update item status
-            if (this.currentItem) {
-                const updatedItem = { ...this.currentItem, status: 'voting' };
-                this.firebaseManager.updateItem(this.currentItem.id, updatedItem);
-            }
-            
-            // Clear all votes
-            this.participants.forEach((participant, name) => {
-                this.firebaseManager.updateParticipant(name, { hasVoted: false });
-                this.firebaseManager.removeVote(name);
-            });
+        if (!this.currentItem) {
+            this.showToast('No item selected', 'error');
+            return;
         }
         
-        // Reset local state
+        this.votes.clear();
         this.votesRevealed = false;
         this.selectedCard = null;
         
-        // Reset cards
-        document.querySelectorAll('.card').forEach(card => {
-            card.classList.remove('selected', 'disabled', 'card-flip');
+        this.participants.forEach(participant => {
+            participant.hasVoted = false;
         });
         
-        // Hide selected card display and stats
+        // Reset UI
+        document.querySelectorAll('.card').forEach(card => {
+            card.classList.remove('selected', 'card-flip');
+        });
+        
         document.getElementById('selectedCardDisplay').classList.add('hidden');
         document.getElementById('voteStats').classList.add('hidden');
+        
+        // Update current item status
+        if (this.currentItem) {
+            this.currentItem.status = 'voting';
+        }
+        
+        this.updateParticipantsList();
+        this.updateItemsList();
+        this.saveToStorage(); // Save the reset state
         
         this.showToast('Votes reset!', 'success');
     }
@@ -567,72 +627,75 @@ class PlanningPokerApp {
         }
         
         const currentIndex = this.items.findIndex(item => item.id === this.currentItem?.id);
-        const nextIndex = currentIndex + 1;
         
-        if (nextIndex < this.items.length) {
-            this.selectItem(this.items[nextIndex]);
+        if (currentIndex < this.items.length - 1) {
+            this.selectItem(this.items[currentIndex + 1]);
+            this.showToast('Moved to next item', 'success');
         } else {
-            this.showToast('No more items', 'info');
-        }
-    }
-    
-    toggleAdminPanel() {
-        const adminPanel = document.getElementById('adminPanel');
-        const toggleBtn = document.getElementById('toggleAdminPanel');
-        
-        if (adminPanel.classList.contains('collapsed')) {
-            adminPanel.classList.remove('collapsed');
-            toggleBtn.innerHTML = '<i class="fas fa-chevron-up"></i>';
-        } else {
-            adminPanel.classList.add('collapsed');
-            toggleBtn.innerHTML = '<i class="fas fa-chevron-down"></i>';
+            this.showToast('This is the last item', 'info');
         }
     }
     
     copySessionLink() {
         const url = `${window.location.origin}${window.location.pathname}?session=${this.sessionId}`;
+        
         navigator.clipboard.writeText(url).then(() => {
             this.showToast('Session link copied to clipboard!', 'success');
         }).catch(() => {
-            this.showToast('Failed to copy link', 'error');
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = url;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            
+            this.showToast('Session link copied to clipboard!', 'success');
         });
     }
     
     showToast(message, type = 'info') {
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        toast.textContent = message;
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
         
-        document.body.appendChild(toast);
+        toastMessage.textContent = message;
+        
+        // Update toast styling based on type
+        const toastDiv = toast.querySelector('div');
+        toastDiv.className = 'px-6 py-3 rounded-lg shadow-lg flex items-center text-white';
+        
+        switch (type) {
+            case 'success':
+                toastDiv.classList.add('bg-green-600');
+                toastDiv.querySelector('i').className = 'fas fa-check-circle mr-2';
+                break;
+            case 'error':
+                toastDiv.classList.add('bg-red-600');
+                toastDiv.querySelector('i').className = 'fas fa-exclamation-circle mr-2';
+                break;
+            case 'info':
+            default:
+                toastDiv.classList.add('bg-gray-800');
+                toastDiv.querySelector('i').className = 'fas fa-info-circle mr-2';
+                break;
+        }
+        
+        toast.classList.remove('hidden');
+        toast.classList.add('toast-enter');
         
         setTimeout(() => {
-            toast.classList.add('show');
-        }, 100);
-        
-        setTimeout(() => {
-            toast.classList.remove('show');
+            toast.classList.remove('toast-enter');
+            toast.classList.add('toast-exit');
+            
             setTimeout(() => {
-                document.body.removeChild(toast);
+                toast.classList.add('hidden');
+                toast.classList.remove('toast-exit');
             }, 300);
         }, 3000);
     }
-    
-    // Clean up Firebase listeners when leaving
-    cleanup() {
-        if (this.firebaseManager) {
-            this.firebaseManager.cleanup();
-        }
-    }
 }
 
-// Initialize app when DOM is loaded
+// Initialize the app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    window.app = new PlanningPokerApp();
-});
-
-// Clean up when page is unloaded
-window.addEventListener('beforeunload', () => {
-    if (window.app) {
-        window.app.cleanup();
-    }
+    new PlanningPokerApp();
 });

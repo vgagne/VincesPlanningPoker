@@ -4,27 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vince's Planning Poker</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-database-compat.js"></script>
-    <script src="firebase-config.js"></script>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-50 min-h-screen">
     <!-- Header -->
-    <header class="bg-red-700 text-white shadow-lg">
+    <header class="bg-red-800 text-white shadow-lg">
         <div class="container mx-auto px-4 py-4">
             <div class="flex justify-between items-center">
                 <h1 class="text-2xl font-bold">
-                    <i class="fas fa-users mr-2"></i>Vince's Planning Poker
+                    <i class="fas fa-layer-group mr-2"></i>
+                    Vince's Planning Poker
                 </h1>
                 <div id="sessionInfo" class="hidden">
-                    <span class="text-sm">Session: <span id="sessionId" class="font-mono bg-red-800 px-2 py-1 rounded"></span></span>
-                    <button id="copyLinkBtn" class="ml-4 bg-white text-red-700 px-3 py-1 rounded text-sm hover:bg-red-50 transition">
-                        <i class="fas fa-copy mr-1"></i>Copy Link
+                    <span class="mr-4">Session: <span id="sessionId"></span></span>
+                    <button id="copyLinkBtn" class="bg-red-700 hover:bg-red-900 px-4 py-2 rounded transition">
+                        <i class="fas fa-share-alt mr-2"></i>Copy Link
                     </button>
                 </div>
             </div>
@@ -99,97 +95,104 @@
             <div class="bg-white rounded-lg shadow-md p-6 mb-6">
                 <div class="flex justify-between items-center">
                     <div class="flex-1">
-                        <div id="votingItemDisplay">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Current Item</h3>
+                        <div id="votingItemDisplay" class="p-4 bg-red-50 rounded-lg">
                             <p class="text-lg font-semibold text-red-800">Select an item to start voting</p>
                         </div>
                     </div>
-                    <div id="voteStats" class="hidden bg-red-50 border border-red-200 rounded-lg p-4">
-                        <!-- Stats will be populated by JavaScript -->
+                    <div id="voteStats" class="hidden ml-6 text-right">
+                        <h4 class="text-lg font-semibold text-gray-700 mb-2">Vote Statistics</h4>
+                        <div class="bg-gray-100 rounded-lg p-4">
+                            <div class="text-sm text-gray-600">Mode</div>
+                            <div id="modeValue" class="text-2xl font-bold text-red-700">-</div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Participants Section (Main Focus) -->
+            <!-- Main Participants Grid -->
             <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                <h3 class="text-xl font-bold text-gray-800 mb-4">
-                    <i class="fas fa-users mr-2 text-red-700"></i>Participants
+                <h3 class="text-xl font-bold mb-4 text-gray-800">
+                    <i class="fas fa-users mr-2"></i>Participants
                 </h3>
-                <div id="participantsGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    <!-- Participants will be added here dynamically -->
+                <div id="participantsGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    <!-- Participant cards will be added here -->
                 </div>
             </div>
 
-            <!-- Admin Panel -->
+            <!-- Admin Panel (collapsible) -->
             <div id="adminPanel" class="bg-white rounded-lg shadow-md p-6 mb-6">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-xl font-bold text-gray-800">
-                        <i class="fas fa-cog mr-2 text-red-700"></i>Admin Panel
+                        <i class="fas fa-cog mr-2"></i>Admin Panel
                     </h3>
-                    <button id="toggleAdminPanel" class="text-red-700 hover:text-red-800">
-                        <i class="fas fa-chevron-up"></i>
+                    <button id="toggleAdminPanel" class="text-gray-600 hover:text-gray-800">
+                        <i class="fas fa-chevron-down"></i>
                     </button>
                 </div>
                 
                 <div id="adminPanelContent">
-                    <!-- Add Item Section -->
+                    <!-- Item Management -->
                     <div class="mb-6">
-                        <h4 class="text-lg font-semibold text-gray-700 mb-3">Add New Item</h4>
-                        <div class="flex space-x-2">
-                            <input type="text" id="newItemInput" placeholder="Enter item description" 
-                                   class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-700 focus:border-transparent">
-                            <button id="addItemBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition">
-                                <i class="fas fa-plus mr-2"></i>Add
-                            </button>
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="font-semibold text-gray-700">Items</h4>
+                            <div class="flex space-x-2">
+                                <input type="text" id="newItemInput" placeholder="Add new item" 
+                                       class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-700 focus:border-transparent">
+                                <button id="addItemBtn" class="bg-red-700 hover:bg-red-800 text-white font-bold py-2 px-4 rounded transition">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="itemsList" class="space-y-2 max-h-48 overflow-y-auto">
+                            <!-- Items will be added here -->
                         </div>
                     </div>
-
-                    <!-- Items List -->
-                    <div class="mb-6">
-                        <h4 class="text-lg font-semibold text-gray-700 mb-3">Items</h4>
-                        <div id="itemsList" class="space-y-2 max-h-40 overflow-y-auto">
-                            <!-- Items will be added here dynamically -->
-                        </div>
-                    </div>
-
-                    <!-- Voting Controls -->
-                    <div class="flex space-x-2">
-                        <button id="revealVotesBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">
+                    
+                    <!-- Control Buttons -->
+                    <div class="flex flex-wrap gap-2">
+                        <button id="revealVotesBtn" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded transition">
                             <i class="fas fa-eye mr-2"></i>Reveal Votes
                         </button>
-                        <button id="resetVotesBtn" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-lg transition">
+                        <button id="resetVotesBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition">
                             <i class="fas fa-redo mr-2"></i>Reset Votes
                         </button>
-                        <button id="nextItemBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition">
+                        <button id="nextItemBtn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition">
                             <i class="fas fa-arrow-right mr-2"></i>Next Item
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Voting Cards Section (Bottom) -->
+            <!-- Voting Cards Section -->
             <div class="bg-white rounded-lg shadow-md p-6">
-                <h3 class="text-xl font-bold text-gray-800 mb-4">
-                    <i class="fas fa-layer-group mr-2 text-red-700"></i>Select Your Vote
+                <h3 class="text-xl font-bold mb-4 text-gray-800">
+                    <i class="fas fa-layer-group mr-2"></i>Select Your Vote
                 </h3>
                 
-                <!-- Selected Card Display -->
-                <div id="selectedCardDisplay" class="hidden mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <p class="text-sm text-red-600 font-medium">Your selection:</p>
-                    <p id="selectedCard" class="text-2xl font-bold text-red-800"></p>
+                <div id="cardsGrid" class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-4">
+                    <!-- Cards will be generated here -->
                 </div>
                 
-                <!-- Cards Grid -->
-                <div id="cardsGrid" class="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-7 gap-3">
-                    <!-- Cards will be generated dynamically -->
+                <!-- Selected Card Display -->
+                <div id="selectedCardDisplay" class="hidden text-center">
+                    <p class="text-sm text-gray-600 mb-2">Your selection:</p>
+                    <div id="selectedCard" class="inline-block bg-red-700 text-white text-3xl font-bold py-6 px-10 rounded-lg shadow-lg">
+                        <!-- Selected card value -->
+                    </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Toast Container -->
-    <div id="toastContainer" class="fixed top-4 right-4 z-50"></div>
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 hidden">
+        <div class="bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg flex items-center">
+            <i class="fas fa-check-circle mr-2"></i>
+            <span id="toastMessage"></span>
+        </div>
+    </div>
 
-    <!-- Firebase-enabled JavaScript -->
-    <script src="script-firebase.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>

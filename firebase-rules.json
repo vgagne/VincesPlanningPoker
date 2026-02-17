@@ -1,0 +1,42 @@
+{
+  "rules": {
+    ".read": true,
+    ".write": true,
+    "sessions": {
+      "$sessionId": {
+        ".read": true,
+        ".write": true,
+        "participants": {
+          "$participantId": {
+            ".read": true,
+            ".write": true
+          }
+        },
+        "items": {
+          "$itemId": {
+            ".read": true,
+            ".write": true
+          }
+        },
+        "votes": {
+          "$voteId": {
+            ".read": true,
+            ".write": true
+          }
+        },
+        "currentItem": {
+          ".read": true,
+          ".write": true
+        },
+        "votesRevealed": {
+          ".read": true,
+          ".write": true
+        }
+      }
+    },
+    "test": {
+      ".read": true,
+      ".write": true
+    }
+  }
+}

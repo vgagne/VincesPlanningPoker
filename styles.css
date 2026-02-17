@@ -218,6 +218,15 @@
 
 .item-card.active {
     @apply bg-red-100 border-red-700 border-2;
+    background: linear-gradient(145deg, #fee2e2, #fecaca);
+    border-left: 4px solid #dc2626;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+    transform: scale(1.02);
+}
+
+.item-card.active .item-title {
+    color: #991b1b;
+    font-weight: 700;
 }
 
 .item-card .item-title {

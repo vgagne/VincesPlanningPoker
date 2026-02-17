@@ -138,21 +138,21 @@
 
 /* Revealed state - show actual vote value on grey background */
 .participant-card .vote-card.revealed {
-    background: linear-gradient(145deg, #6c757d, #495057);
-    border-color: #495057;
-    color: #28a745;
-    font-size: 1.5rem;
-    font-weight: 900;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    border-width: 2px;
+    background: linear-gradient(145deg, #6c757d, #495057) !important;
+    border-color: #495057 !important;
+    color: #28a745 !important;
+    font-size: 1.5rem !important;
+    font-weight: 900 !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+    border-width: 2px !important;
 }
 
 .participant-card .vote-card.revealed.pass {
-    background: linear-gradient(145deg, #6c757d, #495057);
-    border-color: #495057;
-    color: #6c757d;
-    font-style: italic;
-    font-weight: 700;
+    background: linear-gradient(145deg, #6c757d, #495057) !important;
+    border-color: #495057 !important;
+    color: #6c757d !important;
+    font-style: italic !important;
+    font-weight: 700 !important;
 }
 
 .participant-card .vote-card.hidden {

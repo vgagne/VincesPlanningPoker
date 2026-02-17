@@ -1,13 +1,13 @@
 // Firebase Configuration
-// Replace with your actual Firebase config after setting up project
 const firebaseConfig = {
-    apiKey: "your-api-key-here",
-    authDomain: "your-project-id.firebaseapp.com",
-    databaseURL: "https://your-project-id-default-rtdb.firebaseio.com",
-    projectId: "your-project-id",
-    storageBucket: "your-project-id.appspot.com",
-    messagingSenderId: "your-sender-id",
-    appId: "your-app-id"
+    apiKey: "AIzaSyBXx7EgHFlNp5GDJniLb9M9PQP3NeKdRgo",
+    authDomain: "vincesplanningpoker.firebaseapp.com",
+    databaseURL: "https://vincesplanningpoker-default-rtdb.firebaseio.com",
+    projectId: "vincesplanningpoker",
+    storageBucket: "vincesplanningpoker.firebasestorage.app",
+    messagingSenderId: "643490045734",
+    appId: "1:643490045734:web:63b08352e7c82a0d3eabe7",
+    measurementId: "G-HFZ56ZN4ET"
 };
 
 // Initialize Firebase

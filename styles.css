@@ -103,26 +103,54 @@
 }
 
 .participant-card .vote-card {
-    @apply bg-white border-2 border-gray-300 rounded-lg p-2 mx-auto;
-    width: 60px;
-    height: 80px;
+    @apply bg-white border-2 border-gray-800 rounded-lg p-2 mx-auto;
+    width: 80px;
+    height: 50px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.25rem;
     font-weight: 700;
     color: var(--tertiary-color);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     border-radius: 8px;
+    position: relative;
+    background: linear-gradient(145deg, #ffffff, #f0f0f0);
+    border-style: solid;
+    transition: all 0.3s ease;
 }
 
-.participant-card .vote-card:not(.hidden):not(.empty) {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    color: white;
-    border-color: #28a745;
+/* Voted state - grey with green checkmark */
+.participant-card .vote-card.voted {
+    background: linear-gradient(145deg, #6c757d, #495057);
+    border-color: #495057;
+    color: transparent;
+}
+
+.participant-card .vote-card.voted::after {
+    content: '✓';
+    position: absolute;
+    color: #28a745;
     font-size: 1.5rem;
-    transform: scale(1.1);
-    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+    font-weight: 900;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+/* Revealed state - show actual vote value */
+.participant-card .vote-card.revealed {
+    background: linear-gradient(145deg, #ffffff, #f8f9fa);
+    border-color: #28a745;
+    color: var(--tertiary-color);
+    font-size: 1.5rem;
+    box-shadow: 0 6px 12px rgba(40, 167, 69, 0.3);
+    border-width: 3px;
+}
+
+.participant-card .vote-card.revealed.pass {
+    background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+    border-color: #6c757d;
+    color: #6c757d;
+    font-style: italic;
 }
 
 .participant-card .vote-card.hidden {

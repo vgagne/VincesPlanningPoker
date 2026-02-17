@@ -488,18 +488,22 @@ class PlanningPokerApp {
             const participantElement = document.createElement('div');
             participantElement.className = 'participant-card';
             
-            if (participant.hasVoted) {
-                participantElement.classList.add('has-voted');
-            }
-            
             let voteCardHtml = '';
+            let voteCardClass = 'vote-card';
+            
             if (this.votesRevealed && this.votes.has(name)) {
                 const voteValue = this.votes.get(name);
-                voteCardHtml = `<div class="vote-card">${voteValue}</div>`;
+                voteCardClass += ' revealed';
+                if (voteValue === 'Pass') {
+                    voteCardClass += ' pass';
+                }
+                voteCardHtml = `<div class="${voteCardClass}">${voteValue}</div>`;
             } else if (participant.hasVoted) {
-                voteCardHtml = `<div class="vote-card hidden">?</div>`;
+                voteCardClass += ' voted';
+                voteCardHtml = `<div class="${voteCardClass}"></div>`;
             } else {
-                voteCardHtml = `<div class="vote-card empty">-</div>`;
+                voteCardClass += ' empty';
+                voteCardHtml = `<div class="${voteCardClass}">-</div>`;
             }
             
             participantElement.innerHTML = `
@@ -549,61 +553,66 @@ class PlanningPokerApp {
             return;
         }
         
-        // Calculate mode (most frequent value)
+        // Convert votes to numbers for calculation
+        const numericVotes = validVotes.map(vote => {
+            if (vote === '½') return 0.5;
+            const num = parseFloat(vote);
+            return isNaN(num) ? 0 : num;
+        });
+        
+        // Calculate Mean
+        const mean = numericVotes.reduce((sum, val) => sum + val, 0) / numericVotes.length;
+        
+        // Calculate Median
+        const sortedVotes = [...numericVotes].sort((a, b) => a - b);
+        const mid = Math.floor(sortedVotes.length / 2);
+        let median;
+        if (sortedVotes.length % 2 === 0) {
+            median = (sortedVotes[mid - 1] + sortedVotes[mid]) / 2;
+        } else {
+            median = sortedVotes[mid];
+        }
+        
+        // Calculate Mode
         const voteCounts = {};
         validVotes.forEach(vote => {
             voteCounts[vote] = (voteCounts[vote] || 0) + 1;
         });
         
-        let mode = null;
+        let modes = [];
         let maxCount = 0;
-        
         Object.entries(voteCounts).forEach(([vote, count]) => {
             if (count > maxCount) {
                 maxCount = count;
-                mode = vote;
+                modes = [vote];
+            } else if (count === maxCount) {
+                modes.push(vote);
             }
         });
         
-        // Check for ties
-        const modes = Object.entries(voteCounts)
-            .filter(([_, count]) => count === maxCount)
-            .map(([vote, _]) => vote);
-        
-        let result;
-        if (modes.length === 1) {
-            result = mode;
-        } else {
-            // Calculate median for ties
-            const sortedVotes = validVotes.sort((a, b) => {
-                const numA = parseFloat(a) || 0;
-                const numB = parseFloat(b) || 0;
-                return numA - numB;
-            });
-            
-            const mid = Math.floor(sortedVotes.length / 2);
-            if (sortedVotes.length % 2 === 0) {
-                result = (parseFloat(sortedVotes[mid - 1]) + parseFloat(sortedVotes[mid])) / 2;
-            } else {
-                result = sortedVotes[mid];
-            }
-        }
-        
         // Display statistics
         document.getElementById('voteStats').classList.remove('hidden');
-        document.getElementById('voteStats').innerHTML = `
+        document.getElementById('statsContent').innerHTML = `
             <div class="stats-content">
-                <div class="stat-item">
-                    <div class="stat-label">Result:</div>
-                    <div class="stat-value">${result}</div>
+                <div class="stat-item mb-2">
+                    <div class="text-sm text-gray-600">Mean:</div>
+                    <div class="text-lg font-bold text-red-700">${mean.toFixed(2)}</div>
+                </div>
+                <div class="stat-item mb-2">
+                    <div class="text-sm text-gray-600">Median:</div>
+                    <div class="text-lg font-bold text-red-700">${median.toFixed(2)}</div>
+                </div>
+                <div class="stat-item mb-2">
+                    <div class="text-sm text-gray-600">Mode:</div>
+                    <div class="text-lg font-bold text-red-700">${modes.join(', ')}</div>
+                </div>
+                <div class="stat-item mb-2">
+                    <div class="text-sm text-gray-600">Votes:</div>
+                    <div class="text-lg font-bold text-red-700">${validVotes.length}</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-label">Votes:</div>
-                    <div class="stat-value">${validVotes.length}</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Pass:</div>
-                    <div class="stat-value">${voteValues.length - validVotes.length}</div>
+                    <div class="text-sm text-gray-600">Pass:</div>
+                    <div class="text-lg font-bold text-red-700">${voteValues.length - validVotes.length}</div>
                 </div>
             </div>
         `;

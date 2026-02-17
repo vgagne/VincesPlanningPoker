@@ -1,0 +1,11 @@
+Vince's Planning Poker - Version 1.0.0
+Last Updated: 2025-02-17
+Features:
+- No default work items (clean start)
+- Role-based UI (admin vs participant)
+- LocalStorage sync for multi-user testing
+- Modified Fibonacci deck with Pass option
+- Real-time vote collection and reveal
+- Mode/median calculation
+- Playing card design with brand colors
+- Responsive layout with participants focus

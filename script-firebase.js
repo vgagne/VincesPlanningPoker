@@ -199,6 +199,76 @@ class PlanningPokerApp {
     setupFirebaseListeners() {
         if (!this.firebaseManager) return;
         
+        // Load initial data first
+        this.firebaseManager.participantsRef.once('value', (snapshot) => {
+            const participants = snapshot.val() || {};
+            this.participants = new Map();
+            
+            Object.entries(participants).forEach(([name, data]) => {
+                this.participants.set(name, data);
+            });
+            
+            this.updateParticipantsList();
+            console.log('📥 Initial participants loaded:', this.participants);
+        });
+        
+        this.firebaseManager.itemsRef.once('value', (snapshot) => {
+            const items = snapshot.val() || {};
+            this.items = [];
+            
+            Object.entries(items).forEach(([id, data]) => {
+                this.items.push({ id, ...data });
+            });
+            
+            this.updateItemsList();
+            console.log('📋 Initial items loaded:', this.items);
+        });
+        
+        this.firebaseManager.votesRef.once('value', (snapshot) => {
+            const votes = snapshot.val() || {};
+            this.votes = new Map();
+            
+            Object.entries(votes).forEach(([userName, voteValue]) => {
+                this.votes.set(userName, voteValue);
+            });
+            
+            this.updateParticipantsList();
+            console.log('🗳️ Initial votes loaded:', this.votes);
+        });
+        
+        this.firebaseManager.currentItemRef.once('value', (snapshot) => {
+            this.currentItem = snapshot.val();
+            
+            if (this.currentItem) {
+                document.getElementById('votingItemDisplay').innerHTML = `
+                    <p class="text-lg font-semibold text-red-800">${this.currentItem.description}</p>
+                    <p class="text-sm text-red-600 mt-1">Status: ${this.getItemStatusText(this.currentItem.status)}</p>
+                `;
+            }
+            
+            this.updateItemsList();
+            console.log('🎯 Initial current item loaded:', this.currentItem);
+        });
+        
+        this.firebaseManager.votesRevealedRef.once('value', (snapshot) => {
+            this.votesRevealed = snapshot.val() || false;
+            
+            if (this.votesRevealed) {
+                this.calculateAndDisplayMode();
+            }
+            
+            console.log('👁️ Initial votes revealed:', this.votesRevealed);
+        });
+        
+        // Now set up real-time listeners
+        setTimeout(() => {
+            this.setupRealtimeListeners();
+        }, 1000);
+    }
+    
+    setupRealtimeListeners() {
+        console.log('🔄 Setting up real-time listeners...');
+        
         // Listen to participants changes
         this.firebaseManager.onParticipantsChange((snapshot) => {
             const participants = snapshot.val() || {};
@@ -209,6 +279,7 @@ class PlanningPokerApp {
             });
             
             this.updateParticipantsList();
+            console.log('👥 Participants updated:', this.participants);
         });
         
         // Listen to items changes
@@ -221,6 +292,7 @@ class PlanningPokerApp {
             });
             
             this.updateItemsList();
+            console.log('📋 Items updated:', this.items);
         });
         
         // Listen to votes changes
@@ -233,6 +305,7 @@ class PlanningPokerApp {
             });
             
             this.updateParticipantsList();
+            console.log('🗳️ Votes updated:', this.votes);
         });
         
         // Listen to current item changes
@@ -247,6 +320,7 @@ class PlanningPokerApp {
             }
             
             this.updateItemsList();
+            console.log('🎯 Current item updated:', this.currentItem);
         });
         
         // Listen to votes revealed changes
@@ -256,6 +330,8 @@ class PlanningPokerApp {
             if (this.votesRevealed) {
                 this.calculateAndDisplayMode();
             }
+            
+            console.log('👁️ Votes revealed updated:', this.votesRevealed);
         });
     }
     

@@ -2,7 +2,7 @@
 const firebaseConfig = {
     apiKey: "AIzaSyBXx7EgHFlNp5GDJniLb9M9PQP3NeKdRgo",
     authDomain: "vincesplanningpoker.firebaseapp.com",
-    databaseURL: "https://vincesplanningpoker-default-rtdb.firebaseio.com",
+    databaseURL: "https://vincesplanningpoker-default-rtdb.europe-west1.firebasedatabase.app",
     projectId: "vincesplanningpoker",
     storageBucket: "vincesplanningpoker.firebasestorage.app",
     messagingSenderId: "643490045734",

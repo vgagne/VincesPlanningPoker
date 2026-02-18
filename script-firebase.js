@@ -22,7 +22,93 @@ class PlanningPokerApp {
         };
         
         this.initializeEventListeners();
+        this.restoreSessionFromStorage();
         this.checkUrlForSession();
+    }
+    
+    // Session Persistence: Save session data to localStorage
+    saveSessionToStorage() {
+        if (this.sessionId && this.userName) {
+            const sessionData = {
+                sessionId: this.sessionId,
+                userName: this.userName,
+                isAdmin: this.isAdmin,
+                deckType: this.deckType,
+                timestamp: Date.now()
+            };
+            localStorage.setItem('planningPokerSession', JSON.stringify(sessionData));
+            console.log('💾 Session saved to localStorage:', sessionData);
+        }
+    }
+    
+    // Session Persistence: Restore session from localStorage
+    restoreSessionFromStorage() {
+        try {
+            const saved = localStorage.getItem('planningPokerSession');
+            if (saved) {
+                const sessionData = JSON.parse(saved);
+                
+                // Check if session is less than 24 hours old
+                const maxAge = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+                const isValid = (Date.now() - sessionData.timestamp) < maxAge;
+                
+                if (isValid && sessionData.sessionId && sessionData.userName) {
+                    console.log('🔄 Restoring session from localStorage:', sessionData);
+                    this.sessionId = sessionData.sessionId;
+                    this.userName = sessionData.userName;
+                    this.isAdmin = sessionData.isAdmin;
+                    this.deckType = sessionData.deckType || 'modified';
+                    
+                    // Reconnect to Firebase
+                    this.reconnectToSession();
+                    return true;
+                } else {
+                    // Session expired, clear it
+                    localStorage.removeItem('planningPokerSession');
+                    console.log('🗑️ Expired session cleared from localStorage');
+                }
+            }
+        } catch (e) {
+            console.error('❌ Error restoring session from localStorage:', e);
+            localStorage.removeItem('planningPokerSession');
+        }
+        return false;
+    }
+    
+    // Session Persistence: Clear saved session
+    clearSessionFromStorage() {
+        localStorage.removeItem('planningPokerSession');
+        console.log('🗑️ Session cleared from localStorage');
+    }
+    
+    // Reconnect to existing session after page refresh
+    reconnectToSession() {
+        if (typeof FirebaseSessionManager !== 'undefined' && this.sessionId) {
+            this.firebaseManager = new FirebaseSessionManager(this.sessionId);
+            
+            // Verify session still exists in Firebase
+            this.firebaseManager.sessionRef.once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    // Update URL
+                    const url = `${window.location.origin}${window.location.pathname}?session=${this.sessionId}`;
+                    window.history.pushState({}, '', url);
+                    
+                    // Re-add participant to session
+                    this.addParticipantToFirebase(this.userName, this.isAdmin);
+                    
+                    // Start the session UI
+                    this.startSession();
+                    this.showToast('Welcome back! Reconnected to session.', 'success');
+                } else {
+                    // Session no longer exists
+                    this.showToast('Session has ended. Starting fresh.', 'info');
+                    this.clearSessionFromStorage();
+                    this.sessionId = null;
+                    this.userName = '';
+                    this.isAdmin = false;
+                }
+            });
+        }
     }
     
     // XSS Protection: Sanitize user input to prevent HTML injection
@@ -135,6 +221,7 @@ class PlanningPokerApp {
         window.history.pushState({}, '', url);
         
         this.startSession();
+        this.saveSessionToStorage();
         this.showToast('Session created successfully!', 'success');
     }
     
@@ -173,6 +260,7 @@ class PlanningPokerApp {
         window.history.pushState({}, '', url);
         
         this.startSession();
+        this.saveSessionToStorage();
         this.showToast('Joined session successfully!', 'success');
     }
     

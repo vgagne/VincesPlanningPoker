@@ -13,6 +13,7 @@ class PlanningPokerApp {
         this.selectedCard = null;
         this.votesRevealed = false;
         this.firebaseManager = null;
+        this.editingItemId = null; // Track which item is being edited
         
         this.cardDecks = {
             modified: ['0', '½', '1', '2', '3', '5', '8', '13', '20', '40', '100'],
@@ -704,10 +705,11 @@ class PlanningPokerApp {
             }
             
             // Check if this item is being edited
-            const isEditing = itemElement.classList.contains('editing');
+            const isEditing = this.editingItemId === item.id;
             
             if (isEditing) {
                 // Edit mode with input field
+                itemElement.classList.add('editing');
                 itemElement.innerHTML = `
                     <div class="flex items-center space-x-2">
                         <input type="text" class="edit-item-input flex-1 px-2 py-1 border border-red-300 rounded text-sm" 
@@ -722,9 +724,9 @@ class PlanningPokerApp {
                     </div>
                 `;
             } else {
-                // Display mode with edit button for admin
+                // Display mode with edit button for admin (show on ALL items including active)
                 const editButton = this.isAdmin ? `
-                    <button class="edit-item-btn text-gray-400 hover:text-red-600 ml-2" title="Edit item">
+                    <button class="edit-item-btn text-gray-400 hover:text-red-600 ml-2 flex-shrink-0" title="Edit item">
                         <i class="fas fa-pencil-alt text-xs"></i>
                     </button>
                 ` : '';
@@ -742,15 +744,20 @@ class PlanningPokerApp {
             
             // Add click handler for selecting item (only in display mode, not on buttons)
             if (!isEditing) {
+                // Add click handler to the item element for selecting
                 itemElement.addEventListener('click', (e) => {
-                    // Don't select if clicking edit button
-                    if (e.target.closest('.edit-item-btn')) {
-                        e.stopPropagation();
-                        this.startEditingItem(item.id);
-                        return;
-                    }
                     this.selectItem(item);
                 });
+                
+                // Add click handler directly to edit button if it exists
+                const editBtn = itemElement.querySelector('.edit-item-btn');
+                if (editBtn) {
+                    editBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        console.log('✏️ Edit button clicked for item:', item.id);
+                        this.startEditingItem(item.id);
+                    });
+                }
             }
             
             // Add edit mode event listeners
@@ -769,7 +776,7 @@ class PlanningPokerApp {
                 
                 cancelBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    this.cancelEditingItem(item.id);
+                    this.cancelEditingItem();
                 });
                 
                 input.addEventListener('keypress', (e) => {
@@ -779,7 +786,7 @@ class PlanningPokerApp {
                             this.saveItemEdit(item.id, newDescription);
                         }
                     } else if (e.key === 'Escape') {
-                        this.cancelEditingItem(item.id);
+                        this.cancelEditingItem();
                     }
                 });
                 
@@ -792,19 +799,13 @@ class PlanningPokerApp {
     }
     
     startEditingItem(itemId) {
-        const itemElement = document.querySelector(`.item-card[data-item-id="${itemId}"]`);
-        if (itemElement) {
-            itemElement.classList.add('editing');
-            this.updateItemsList();
-        }
+        this.editingItemId = itemId;
+        this.updateItemsList();
     }
     
-    cancelEditingItem(itemId) {
-        const itemElement = document.querySelector(`.item-card[data-item-id="${itemId}"]`);
-        if (itemElement) {
-            itemElement.classList.remove('editing');
-            this.updateItemsList();
-        }
+    cancelEditingItem() {
+        this.editingItemId = null;
+        this.updateItemsList();
     }
     
     saveItemEdit(itemId, newDescription) {
@@ -827,11 +828,9 @@ class PlanningPokerApp {
                 });
         }
         
-        // Remove editing mode
-        const itemElement = document.querySelector(`.item-card[data-item-id="${itemId}"]`);
-        if (itemElement) {
-            itemElement.classList.remove('editing');
-        }
+        // Clear editing state
+        this.editingItemId = null;
+        this.updateItemsList();
     }
     
     updateCurrentItemDisplay() {

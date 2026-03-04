@@ -135,6 +135,7 @@ class PlanningPokerApp {
         document.getElementById('resetVotesBtn').addEventListener('click', () => this.resetVotes());
         document.getElementById('nextItemBtn').addEventListener('click', () => this.nextItem());
         document.getElementById('toggleAdminPanel').addEventListener('click', () => this.toggleAdminPanel());
+        document.getElementById('leaveSessionBtn').addEventListener('click', () => this.leaveSession());
         
         // Enter key support
         document.getElementById('userName').addEventListener('keypress', (e) => {
@@ -295,6 +296,105 @@ class PlanningPokerApp {
         this.updateItemsList();
     }
     
+    leaveSession() {
+        if (!confirm('Are you sure you want to leave this session?')) {
+            return;
+        }
+        
+        console.log('👋 Leaving session:', this.sessionId, 'Admin:', this.isAdmin);
+        
+        if (this.isAdmin) {
+            // Admin leaving - end session for everyone
+            this.endSessionForAll();
+        } else {
+            // Participant leaving - just remove themselves
+            this.removeParticipantFromSession();
+        }
+    }
+    
+    removeParticipantFromSession() {
+        // Remove participant from Firebase
+        if (this.firebaseManager && this.userName) {
+            this.firebaseManager.removeParticipant(this.userName);
+        }
+        
+        // Clear local session data
+        this.clearSessionFromStorage();
+        
+        // Clean up Firebase listeners
+        if (this.firebaseManager) {
+            this.firebaseManager.cleanup();
+        }
+        
+        // Reset app state
+        this.resetAppState();
+        
+        // Show start view
+        this.showStartView();
+        
+        this.showToast('You have left the session', 'info');
+    }
+    
+    endSessionForAll() {
+        // Mark session as ended in Firebase
+        if (this.firebaseManager) {
+            this.firebaseManager.updateSession({ 
+                sessionEnded: true, 
+                endedBy: this.userName,
+                endedAt: firebase.database.ServerValue.TIMESTAMP 
+            });
+        }
+        
+        // Give a moment for the session ended flag to propagate
+        setTimeout(() => {
+            // Clear local session data
+            this.clearSessionFromStorage();
+            
+            // Clean up Firebase listeners
+            if (this.firebaseManager) {
+                this.firebaseManager.cleanup();
+            }
+            
+            // Reset app state
+            this.resetAppState();
+            
+            // Show start view
+            this.showStartView();
+            
+            this.showToast('Session ended. All participants have been notified.', 'info');
+        }, 500);
+    }
+    
+    resetAppState() {
+        // Reset all session-related state
+        this.sessionId = null;
+        this.isAdmin = false;
+        this.userName = '';
+        this.currentItem = null;
+        this.participants.clear();
+        this.items = [];
+        this.votes.clear();
+        this.selectedCard = null;
+        this.votesRevealed = false;
+        this.firebaseManager = null;
+    }
+    
+    showStartView() {
+        // Hide game view, show start view
+        document.getElementById('gameView').classList.add('hidden');
+        document.getElementById('startView').classList.remove('hidden');
+        document.getElementById('sessionInfo').classList.add('hidden');
+        document.getElementById('adminPanel').classList.add('hidden');
+        
+        // Clear URL parameters
+        window.history.pushState({}, '', window.location.pathname);
+        
+        // Reset form inputs
+        document.getElementById('userNameCreate').value = '';
+        document.getElementById('userName').value = '';
+        document.getElementById('sessionIdInput').value = '';
+    }
+    
     setupFirebaseListeners() {
         if (!this.firebaseManager) return;
         
@@ -439,6 +539,31 @@ class PlanningPokerApp {
             this.updateParticipantsList();
             
             console.log('👁️ Votes revealed updated:', this.votesRevealed);
+        });
+        
+        // Listen to session ended status (admin left)
+        this.firebaseManager.onSessionChange((snapshot) => {
+            const sessionData = snapshot.val();
+            if (sessionData && sessionData.sessionEnded && !this.isAdmin) {
+                console.log('🚫 Session has been ended by admin');
+                
+                // Show alert to user
+                alert('The admin has left. This session has ended.');
+                
+                // Clear local session data
+                this.clearSessionFromStorage();
+                
+                // Clean up Firebase listeners
+                if (this.firebaseManager) {
+                    this.firebaseManager.cleanup();
+                }
+                
+                // Reset app state
+                this.resetAppState();
+                
+                // Show start view
+                this.showStartView();
+            }
         });
     }
     

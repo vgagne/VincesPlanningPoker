@@ -490,3 +490,27 @@
     outline: 3px solid var(--primary-color);
     outline-offset: 2px;
 }
+
+/* Item editing styles */
+.item-card.editing {
+    @apply bg-red-50 border-red-400;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.15);
+}
+
+.item-card .edit-item-input {
+    @apply w-full px-2 py-1 border border-red-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent;
+    min-width: 0;
+}
+
+.item-card .edit-item-btn {
+    @apply opacity-0 transition-opacity duration-200;
+}
+
+.item-card:hover .edit-item-btn {
+    @apply opacity-100;
+}
+
+.item-card .save-edit-btn,
+.item-card .cancel-edit-btn {
+    @apply flex-shrink-0 p-1 rounded hover:bg-gray-100 transition-colors;
+}

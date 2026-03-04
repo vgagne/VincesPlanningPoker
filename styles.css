@@ -212,6 +212,10 @@
 }
 
 /* Item list styling */
+#itemsList {
+    overflow-x: hidden;
+}
+
 .item-card {
     @apply bg-white border border-gray-200 rounded-lg p-3 cursor-pointer transition-all duration-200 hover:border-red-700 hover:bg-red-50;
 }
@@ -511,8 +515,9 @@
 }
 
 .item-card .edit-item-input {
-    @apply w-full px-2 py-1 border border-red-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent;
+    @apply px-2 py-1 border border-red-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent;
     min-width: 0;
+    width: 200px;
 }
 
 .item-card .edit-item-btn {

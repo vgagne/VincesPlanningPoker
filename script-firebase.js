@@ -655,30 +655,43 @@ class PlanningPokerApp {
             return;
         }
         
+        // Check if selecting a completed item (already voted on)
+        const isCompletedItem = item.status === 'completed';
+        
         // Update Firebase
         if (this.firebaseManager) {
             this.firebaseManager.setCurrentItem(item);
-            this.firebaseManager.setVotesRevealed(false);
             
-            // Clear all votes
-            this.participants.forEach((participant, name) => {
-                this.firebaseManager.updateParticipant(name, { hasVoted: false });
-                this.firebaseManager.removeVote(name);
-            });
+            if (!isCompletedItem) {
+                // Only reset votes for new items, not completed ones
+                this.firebaseManager.setVotesRevealed(false);
+                
+                // Clear all votes
+                this.participants.forEach((participant, name) => {
+                    this.firebaseManager.updateParticipant(name, { hasVoted: false });
+                    this.firebaseManager.removeVote(name);
+                });
+            }
         }
         
-        // Reset local state
-        this.selectedCard = null;
-        this.votesRevealed = false;
-        
-        // Reset cards
-        document.querySelectorAll('.card').forEach(card => {
-            card.classList.remove('selected', 'disabled');
-        });
-        
-        // Hide selected card display and stats
-        document.getElementById('selectedCardDisplay').classList.add('hidden');
-        document.getElementById('voteStats').classList.add('hidden');
+        // Reset local state only for non-completed items
+        if (!isCompletedItem) {
+            this.selectedCard = null;
+            this.votesRevealed = false;
+            
+            // Reset cards
+            document.querySelectorAll('.card').forEach(card => {
+                card.classList.remove('selected', 'disabled');
+            });
+            
+            // Hide selected card display and stats for new items
+            document.getElementById('selectedCardDisplay').classList.add('hidden');
+            document.getElementById('voteStats').classList.add('hidden');
+        } else {
+            // For completed items, show vote stats and maintain revealed state
+            this.votesRevealed = true;
+            document.getElementById('voteStats').classList.remove('hidden');
+        }
     }
     
     getItemStatusText(status) {
@@ -700,10 +713,13 @@ class PlanningPokerApp {
             itemElement.dataset.itemId = item.id;
             if (this.currentItem && this.currentItem.id === item.id) {
                 itemElement.classList.add('active');
-                // Add votes-revealed class if votes are revealed
-                if (this.votesRevealed) {
+                // Add votes-revealed class if item is completed (votes were revealed)
+                if (item.status === 'completed') {
                     itemElement.classList.add('votes-revealed');
                 }
+            } else if (item.status === 'completed') {
+                // Completed items always show green even when not selected
+                itemElement.classList.add('votes-revealed');
             }
             
             // Check if this item is being edited
@@ -734,12 +750,12 @@ class PlanningPokerApp {
                 ` : '';
                 
                 itemElement.innerHTML = `
-                    <div class="flex items-center">
-                        <div class="flex-1 min-w-0 overflow-hidden">
+                    <div class="flex flex-col">
+                        <div class="flex items-center">
                             <div class="item-title text-ellipsis">${this.sanitizeHTML(item.description)}</div>
-                            <div class="item-status">${this.getItemStatusText(item.status)}</div>
+                            ${editButton}
                         </div>
-                        ${editButton}
+                        <div class="item-status">${this.getItemStatusText(item.status)}</div>
                     </div>
                 `;
             }
@@ -838,11 +854,11 @@ class PlanningPokerApp {
         const votingItemDisplay = document.getElementById('votingItemDisplay');
         if (this.currentItem) {
             const safeDescription = this.sanitizeHTML(this.currentItem.description);
-            // Set colors based on votes revealed state
-            const isRevealed = this.votesRevealed;
-            const bgClass = isRevealed ? 'bg-green-100 border-green-400' : 'bg-gray-100 border-gray-300';
-            const textClass = isRevealed ? 'text-green-800' : 'text-gray-800';
-            const statusClass = isRevealed ? 'text-green-600' : 'text-gray-600';
+            // Set colors based on item status (completed = green, otherwise grey)
+            const isCompleted = this.currentItem.status === 'completed';
+            const bgClass = isCompleted ? 'bg-green-100 border-green-400' : 'bg-gray-100 border-gray-300';
+            const textClass = isCompleted ? 'text-green-800' : 'text-gray-800';
+            const statusClass = isCompleted ? 'text-green-600' : 'text-gray-600';
             
             votingItemDisplay.className = `p-4 rounded-lg border ${bgClass}`;
             votingItemDisplay.innerHTML = `

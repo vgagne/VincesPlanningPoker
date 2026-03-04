@@ -698,18 +698,155 @@ class PlanningPokerApp {
         this.items.forEach(item => {
             const itemElement = document.createElement('div');
             itemElement.className = 'item-card';
+            itemElement.dataset.itemId = item.id;
             if (this.currentItem && this.currentItem.id === item.id) {
                 itemElement.classList.add('active');
             }
             
-            itemElement.innerHTML = `
-                <div class="item-title text-ellipsis">${this.sanitizeHTML(item.description)}</div>
-                <div class="item-status">${this.getItemStatusText(item.status)}</div>
-            `;
+            // Check if this item is being edited
+            const isEditing = itemElement.classList.contains('editing');
             
-            itemElement.addEventListener('click', () => this.selectItem(item));
+            if (isEditing) {
+                // Edit mode with input field
+                itemElement.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <input type="text" class="edit-item-input flex-1 px-2 py-1 border border-red-300 rounded text-sm" 
+                               value="${this.sanitizeHTML(item.description)}" 
+                               placeholder="Enter item name...">
+                        <button class="save-edit-btn text-green-600 hover:text-green-800 px-2" title="Save">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button class="cancel-edit-btn text-gray-500 hover:text-gray-700 px-2" title="Cancel">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+            } else {
+                // Display mode with edit button for admin
+                const editButton = this.isAdmin ? `
+                    <button class="edit-item-btn text-gray-400 hover:text-red-600 ml-2" title="Edit item">
+                        <i class="fas fa-pencil-alt text-xs"></i>
+                    </button>
+                ` : '';
+                
+                itemElement.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1 min-w-0">
+                            <div class="item-title text-ellipsis">${this.sanitizeHTML(item.description)}</div>
+                            <div class="item-status">${this.getItemStatusText(item.status)}</div>
+                        </div>
+                        ${editButton}
+                    </div>
+                `;
+            }
+            
+            // Add click handler for selecting item (only in display mode, not on buttons)
+            if (!isEditing) {
+                itemElement.addEventListener('click', (e) => {
+                    // Don't select if clicking edit button
+                    if (e.target.closest('.edit-item-btn')) {
+                        e.stopPropagation();
+                        this.startEditingItem(item.id);
+                        return;
+                    }
+                    this.selectItem(item);
+                });
+            }
+            
+            // Add edit mode event listeners
+            if (isEditing) {
+                const input = itemElement.querySelector('.edit-item-input');
+                const saveBtn = itemElement.querySelector('.save-edit-btn');
+                const cancelBtn = itemElement.querySelector('.cancel-edit-btn');
+                
+                saveBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const newDescription = input.value.trim();
+                    if (newDescription) {
+                        this.saveItemEdit(item.id, newDescription);
+                    }
+                });
+                
+                cancelBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.cancelEditingItem(item.id);
+                });
+                
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        const newDescription = input.value.trim();
+                        if (newDescription) {
+                            this.saveItemEdit(item.id, newDescription);
+                        }
+                    } else if (e.key === 'Escape') {
+                        this.cancelEditingItem(item.id);
+                    }
+                });
+                
+                // Focus the input
+                setTimeout(() => input.focus(), 0);
+            }
+            
             itemsList.appendChild(itemElement);
         });
+    }
+    
+    startEditingItem(itemId) {
+        const itemElement = document.querySelector(`.item-card[data-item-id="${itemId}"]`);
+        if (itemElement) {
+            itemElement.classList.add('editing');
+            this.updateItemsList();
+        }
+    }
+    
+    cancelEditingItem(itemId) {
+        const itemElement = document.querySelector(`.item-card[data-item-id="${itemId}"]`);
+        if (itemElement) {
+            itemElement.classList.remove('editing');
+            this.updateItemsList();
+        }
+    }
+    
+    saveItemEdit(itemId, newDescription) {
+        // Update in Firebase
+        if (this.firebaseManager) {
+            this.firebaseManager.updateItem(itemId, { description: newDescription })
+                .then(() => {
+                    console.log('✏️ Item updated:', itemId, newDescription);
+                    this.showToast('Item updated successfully', 'success');
+                    
+                    // If this is the current item, update the display
+                    if (this.currentItem && this.currentItem.id === itemId) {
+                        this.currentItem.description = newDescription;
+                        this.updateCurrentItemDisplay();
+                    }
+                })
+                .catch((error) => {
+                    console.error('❌ Error updating item:', error);
+                    this.showToast('Failed to update item', 'error');
+                });
+        }
+        
+        // Remove editing mode
+        const itemElement = document.querySelector(`.item-card[data-item-id="${itemId}"]`);
+        if (itemElement) {
+            itemElement.classList.remove('editing');
+        }
+    }
+    
+    updateCurrentItemDisplay() {
+        const votingItemDisplay = document.getElementById('votingItemDisplay');
+        if (this.currentItem) {
+            const safeDescription = this.sanitizeHTML(this.currentItem.description);
+            votingItemDisplay.innerHTML = `
+                <p class="text-lg font-semibold text-red-800">${safeDescription}</p>
+                <p class="text-sm text-red-600 mt-1">Status: ${this.getItemStatusText(this.currentItem.status)}</p>
+            `;
+        } else {
+            votingItemDisplay.innerHTML = `
+                <p class="text-lg font-semibold text-red-800">Select an item to start voting</p>
+            `;
+        }
     }
     
     updateParticipantsList() {

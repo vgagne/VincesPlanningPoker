@@ -54,7 +54,6 @@ class PlanningPokerApp {
                 const isValid = (Date.now() - sessionData.timestamp) < maxAge;
                 
                 if (isValid && sessionData.sessionId && sessionData.userName) {
-                    console.log('🔄 Restoring session from localStorage:', sessionData);
                     this.sessionId = sessionData.sessionId;
                     this.userName = sessionData.userName;
                     this.isAdmin = sessionData.isAdmin;
@@ -471,7 +470,6 @@ class PlanningPokerApp {
     }
     
     setupRealtimeListeners() {
-        console.log('🔄 Setting up real-time listeners...');
         
         // Listen to participants changes
         this.firebaseManager.onParticipantsChange((snapshot) => {
@@ -693,7 +691,6 @@ class PlanningPokerApp {
     }
     
     updateItemsList() {
-        console.log('🔄 updateItemsList called, editingItemId:', this.editingItemId);
         const itemsList = document.getElementById('itemsList');
         itemsList.innerHTML = '';
         
@@ -711,7 +708,6 @@ class PlanningPokerApp {
             
             // Check if this item is being edited
             const isEditing = this.editingItemId === item.id;
-            console.log('🔎 Item:', item.id, 'isEditing:', isEditing, 'editingItemId:', this.editingItemId, 'item.id:', item.id, 'match:', this.editingItemId === item.id);
             
             if (isEditing) {
                 // Edit mode with input field
@@ -737,8 +733,6 @@ class PlanningPokerApp {
                     </button>
                 ` : '';
                 
-                console.log('🔧 Rendering item:', item.id, 'isAdmin:', this.isAdmin, 'editButton:', editButton ? 'YES' : 'NO');
-                
                 itemElement.innerHTML = `
                     <div class="flex items-center">
                         <div class="flex-1 min-w-0 overflow-hidden">
@@ -759,15 +753,12 @@ class PlanningPokerApp {
                 
                 // Add click handler directly to edit button if it exists
                 const editBtn = itemElement.querySelector('.edit-item-btn');
-                console.log('🔍 Looking for edit button on item:', item.id, 'found:', editBtn ? 'YES' : 'NO');
                 if (editBtn) {
                     editBtn.addEventListener('click', (e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        console.log('✏️ Edit button CLICKED for item:', item.id);
                         this.startEditingItem(item.id);
                     });
-                    console.log('✅ Edit button listener attached for item:', item.id);
                 }
             }
             
@@ -810,9 +801,7 @@ class PlanningPokerApp {
     }
     
     startEditingItem(itemId) {
-        console.log('📝 startEditingItem called with itemId:', itemId, 'current editingItemId:', this.editingItemId);
         this.editingItemId = itemId;
-        console.log('📝 After setting, editingItemId is now:', this.editingItemId);
         this.updateItemsList();
     }
     
@@ -826,7 +815,6 @@ class PlanningPokerApp {
         if (this.firebaseManager) {
             this.firebaseManager.updateItem(itemId, { description: newDescription })
                 .then(() => {
-                    console.log('✏️ Item updated:', itemId, newDescription);
                     this.showToast('Item updated successfully', 'success');
                     
                     // If this is the current item, update the display
@@ -850,13 +838,21 @@ class PlanningPokerApp {
         const votingItemDisplay = document.getElementById('votingItemDisplay');
         if (this.currentItem) {
             const safeDescription = this.sanitizeHTML(this.currentItem.description);
+            // Set colors based on votes revealed state
+            const isRevealed = this.votesRevealed;
+            const bgClass = isRevealed ? 'bg-green-100 border-green-400' : 'bg-gray-100 border-gray-300';
+            const textClass = isRevealed ? 'text-green-800' : 'text-gray-800';
+            const statusClass = isRevealed ? 'text-green-600' : 'text-gray-600';
+            
+            votingItemDisplay.className = `p-4 rounded-lg border ${bgClass}`;
             votingItemDisplay.innerHTML = `
-                <p class="text-lg font-semibold text-red-800">${safeDescription}</p>
-                <p class="text-sm text-red-600 mt-1">Status: ${this.getItemStatusText(this.currentItem.status)}</p>
+                <p class="text-lg font-semibold ${textClass}">${safeDescription}</p>
+                <p class="text-sm ${statusClass} mt-1">Status: ${this.getItemStatusText(this.currentItem.status)}</p>
             `;
         } else {
+            votingItemDisplay.className = 'p-4 bg-gray-100 rounded-lg border border-gray-300';
             votingItemDisplay.innerHTML = `
-                <p class="text-lg font-semibold text-red-800">Select an item to start voting</p>
+                <p class="text-lg font-semibold text-gray-800">Select an item to start voting</p>
             `;
         }
     }
@@ -864,12 +860,6 @@ class PlanningPokerApp {
     updateParticipantsList() {
         const participantsGrid = document.getElementById('participantsGrid');
         participantsGrid.innerHTML = '';
-        
-        console.log('🔄 Updating participants list:', {
-            votesRevealed: this.votesRevealed,
-            votes: Array.from(this.votes.entries()),
-            participants: Array.from(this.participants.entries())
-        });
         
         this.participants.forEach((participant, name) => {
             const participantElement = document.createElement('div');
@@ -888,17 +878,14 @@ class PlanningPokerApp {
                 const isPass = voteValue === 'Pass';
                 cardStyle = `background: linear-gradient(145deg, #e9ecef, #dee2e6); border: 2px solid #6c757d; color: ${isPass ? '#6c757d' : '#28a745'}; font-size: 1.5rem; font-weight: 900; width: 80px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); margin: 0 auto; font-style: ${isPass ? 'italic' : 'normal'};`;
                 cardContent = voteValue;
-                console.log(`✅ REVEALED: ${name} = ${voteValue}`);
             } else if (hasVoted) {
                 // VOTED (hidden): Dark grey with green checkmark
                 cardStyle = `background: linear-gradient(145deg, #6c757d, #495057); border: 2px solid #495057; color: #28a745; width: 80px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.15); margin: 0 auto; font-size: 1.5rem; font-weight: 900;`;
                 cardContent = '✓';
-                console.log(`🔒 HIDDEN: ${name} has voted`);
             } else {
                 // NOT VOTED: White with dash
                 cardStyle = `background: linear-gradient(145deg, #ffffff, #f0f0f0); border: 2px solid #dee2e6; color: #6c757d; width: 80px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.15); margin: 0 auto; font-size: 1.25rem; font-weight: 700;`;
                 cardContent = '-';
-                console.log(`⭕ EMPTY: ${name} has not voted`);
             }
             
             participantElement.innerHTML = `

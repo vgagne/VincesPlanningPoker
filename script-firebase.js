@@ -731,6 +731,8 @@ class PlanningPokerApp {
                     </button>
                 ` : '';
                 
+                console.log('🔧 Rendering item:', item.id, 'isAdmin:', this.isAdmin, 'editButton:', editButton ? 'YES' : 'NO');
+                
                 itemElement.innerHTML = `
                     <div class="flex items-center justify-between">
                         <div class="flex-1 min-w-0">
@@ -751,12 +753,15 @@ class PlanningPokerApp {
                 
                 // Add click handler directly to edit button if it exists
                 const editBtn = itemElement.querySelector('.edit-item-btn');
+                console.log('🔍 Looking for edit button on item:', item.id, 'found:', editBtn ? 'YES' : 'NO');
                 if (editBtn) {
                     editBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
                         e.stopPropagation();
-                        console.log('✏️ Edit button clicked for item:', item.id);
+                        console.log('✏️ Edit button CLICKED for item:', item.id);
                         this.startEditingItem(item.id);
                     });
+                    console.log('✅ Edit button listener attached for item:', item.id);
                 }
             }
             

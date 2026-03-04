@@ -730,7 +730,7 @@ class PlanningPokerApp {
                 itemElement.classList.add('editing');
                 itemElement.innerHTML = `
                     <div class="flex items-center space-x-2">
-                        <input type="text" class="edit-item-input flex-1 px-2 py-1 border border-red-300 rounded text-sm" 
+                        <input type="text" class="edit-item-input w-1/2 px-2 py-1 border border-red-300 rounded text-sm" 
                                value="${this.sanitizeHTML(item.description)}" 
                                placeholder="Enter item name...">
                         <button class="save-edit-btn text-green-600 hover:text-green-800 px-2" title="Save">

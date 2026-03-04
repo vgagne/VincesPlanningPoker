@@ -693,6 +693,7 @@ class PlanningPokerApp {
     }
     
     updateItemsList() {
+        console.log('🔄 updateItemsList called, editingItemId:', this.editingItemId);
         const itemsList = document.getElementById('itemsList');
         itemsList.innerHTML = '';
         
@@ -710,6 +711,7 @@ class PlanningPokerApp {
             
             // Check if this item is being edited
             const isEditing = this.editingItemId === item.id;
+            console.log('🔎 Item:', item.id, 'isEditing:', isEditing, 'editingItemId:', this.editingItemId, 'item.id:', item.id, 'match:', this.editingItemId === item.id);
             
             if (isEditing) {
                 // Edit mode with input field
@@ -808,7 +810,9 @@ class PlanningPokerApp {
     }
     
     startEditingItem(itemId) {
+        console.log('📝 startEditingItem called with itemId:', itemId, 'current editingItemId:', this.editingItemId);
         this.editingItemId = itemId;
+        console.log('📝 After setting, editingItemId is now:', this.editingItemId);
         this.updateItemsList();
     }
     

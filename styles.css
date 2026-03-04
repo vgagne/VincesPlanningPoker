@@ -217,15 +217,28 @@
 }
 
 .item-card.active {
-    @apply bg-red-100 border-red-700 border-2;
-    background: linear-gradient(145deg, #fee2e2, #fecaca);
-    border-left: 4px solid #dc2626;
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+    @apply bg-gray-100 border-gray-500 border-2;
+    background: linear-gradient(145deg, #f3f4f6, #e5e7eb);
+    border-left: 4px solid #6b7280;
+    box-shadow: 0 4px 12px rgba(107, 114, 128, 0.2);
     transform: scale(1.02);
 }
 
 .item-card.active .item-title {
-    color: #991b1b;
+    color: #374151;
+    font-weight: 700;
+}
+
+/* When votes are revealed, selected item turns light green */
+.item-card.active.votes-revealed {
+    @apply bg-green-100 border-green-500 border-2;
+    background: linear-gradient(145deg, #dcfce7, #bbf7d0);
+    border-left: 4px solid #22c55e;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+}
+
+.item-card.active.votes-revealed .item-title {
+    color: #15803d;
     font-weight: 700;
 }
 

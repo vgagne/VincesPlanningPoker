@@ -702,6 +702,10 @@ class PlanningPokerApp {
             itemElement.dataset.itemId = item.id;
             if (this.currentItem && this.currentItem.id === item.id) {
                 itemElement.classList.add('active');
+                // Add votes-revealed class if votes are revealed
+                if (this.votesRevealed) {
+                    itemElement.classList.add('votes-revealed');
+                }
             }
             
             // Check if this item is being edited
@@ -731,11 +735,9 @@ class PlanningPokerApp {
                     </button>
                 ` : '';
                 
-                console.log('🔧 Rendering item:', item.id, 'isAdmin:', this.isAdmin, 'editButton:', editButton ? 'YES' : 'NO');
-                
                 itemElement.innerHTML = `
-                    <div class="flex items-center justify-between">
-                        <div class="flex-1 min-w-0">
+                    <div class="flex items-center">
+                        <div class="flex-1 min-w-0 overflow-hidden">
                             <div class="item-title text-ellipsis">${this.sanitizeHTML(item.description)}</div>
                             <div class="item-status">${this.getItemStatusText(item.status)}</div>
                         </div>
@@ -753,15 +755,12 @@ class PlanningPokerApp {
                 
                 // Add click handler directly to edit button if it exists
                 const editBtn = itemElement.querySelector('.edit-item-btn');
-                console.log('🔍 Looking for edit button on item:', item.id, 'found:', editBtn ? 'YES' : 'NO');
                 if (editBtn) {
                     editBtn.addEventListener('click', (e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        console.log('✏️ Edit button CLICKED for item:', item.id);
                         this.startEditingItem(item.id);
                     });
-                    console.log('✅ Edit button listener attached for item:', item.id);
                 }
             }
             

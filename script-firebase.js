@@ -213,7 +213,10 @@ class PlanningPokerApp {
             this.showToast('Firebase not properly initialized', 'error');
             return;
         }
-        
+
+        // Store deckType in Firebase so participants can read it
+        this.firebaseManager.updateSession({ deckType: this.deckType });
+
         // Add admin as first participant
         this.addParticipantToFirebase(userName, true);
         
@@ -398,6 +401,17 @@ class PlanningPokerApp {
     setupFirebaseListeners() {
         if (!this.firebaseManager) return;
         
+        // Read deckType from Firebase so participants get the correct card deck
+        this.firebaseManager.sessionRef.child('deckType').once('value', (snapshot) => {
+            const deckType = snapshot.val();
+            if (deckType && deckType !== this.deckType) {
+                this.deckType = deckType;
+                this.generateCards();
+                this.saveSessionToStorage();
+            }
+            console.log('🃏 Deck type loaded:', this.deckType);
+        });
+
         // Load initial data first
         this.firebaseManager.participantsRef.once('value', (snapshot) => {
             const participants = snapshot.val() || {};

@@ -526,8 +526,17 @@ class PlanningPokerApp {
         
         // Listen to current item changes
         this.firebaseManager.onCurrentItemChange((snapshot) => {
-            this.currentItem = snapshot.val();
-            
+            const newItem = snapshot.val();
+            const itemChanged = !this.currentItem || !newItem || this.currentItem.id !== newItem.id;
+
+            this.currentItem = newItem;
+
+            // Reset vote selection for everyone when switching to a different item
+            if (itemChanged && newItem && newItem.status !== 'completed') {
+                this.resetLocalVoteSelection();
+                document.getElementById('voteStats').classList.add('hidden');
+            }
+
             if (this.currentItem) {
                 const safeDescription = this.sanitizeHTML(this.currentItem.description);
                 document.getElementById('votingItemDisplay').innerHTML = `
@@ -535,22 +544,26 @@ class PlanningPokerApp {
                     <p class="text-sm text-red-600 mt-1">Status: ${this.getItemStatusText(this.currentItem.status)}</p>
                 `;
             }
-            
+
             this.updateItemsList();
             console.log('🎯 Current item updated:', this.currentItem);
         });
-        
+
         // Listen to votes revealed changes
         this.firebaseManager.onVotesRevealedChange((snapshot) => {
             this.votesRevealed = snapshot.val() || false;
-            
+
             if (this.votesRevealed) {
                 this.calculateAndDisplayMode();
+            } else {
+                // Votes were reset — clear everyone's local selection
+                this.resetLocalVoteSelection();
+                document.getElementById('voteStats').classList.add('hidden');
             }
-            
-            // CRITICAL: Update participant cards to show/hide votes
+
+            // Update participant cards to show/hide votes
             this.updateParticipantsList();
-            
+
             console.log('👁️ Votes revealed updated:', this.votesRevealed);
         });
         
@@ -580,6 +593,14 @@ class PlanningPokerApp {
         });
     }
     
+    resetLocalVoteSelection() {
+        this.selectedCard = null;
+        document.querySelectorAll('.card').forEach(card => {
+            card.classList.remove('selected', 'disabled', 'card-flip');
+        });
+        document.getElementById('selectedCardDisplay').classList.add('hidden');
+    }
+
     generateCards() {
         const cardsGrid = document.getElementById('cardsGrid');
         cardsGrid.innerHTML = '';

@@ -16,217 +16,184 @@
 <body>
 
     <!-- ============================================================
-         START VIEW — Split panel: brand left, forms right
+         START VIEW
          ============================================================ -->
     <div id="startView" class="start-view">
-        <div class="start-card">
+        <div class="start-container">
 
-            <!-- Brand panel -->
-            <div class="brand-panel">
-                <div class="brand-logo">
-                    <i class="fas fa-layer-group brand-icon"></i>
-                    <span class="brand-name">Planning Poker</span>
-                </div>
-                <div class="brand-body">
-                    <h1 class="brand-headline">Estimate together.<br/>Ship faster.</h1>
-                    <p class="brand-sub">Real-time planning poker for agile teams. No sign-up required.</p>
-                </div>
-                <ul class="brand-features">
-                    <li><i class="fas fa-bolt"></i> Real-time sync across all participants</li>
-                    <li><i class="fas fa-layer-group"></i> Fibonacci, T-shirt &amp; more deck types</li>
-                    <li><i class="fas fa-eye"></i> Simultaneous vote reveal</li>
-                    <li><i class="fas fa-chart-bar"></i> Mean, median &amp; mode statistics</li>
-                </ul>
+            <div class="start-logo">
+                <i class="fas fa-layer-group start-logo-icon"></i>
+                <span class="start-logo-text">Vince's Planning Poker</span>
             </div>
 
-            <!-- Form panel -->
-            <div class="form-panel">
-                <h2 class="form-heading">Welcome</h2>
-                <p class="form-sub">Join a live session or start your own.</p>
-
-                <!-- Tabs -->
-                <div class="tab-bar">
+            <div class="start-card">
+                <!-- Tab strip -->
+                <div class="tab-strip">
                     <button id="tabJoinBtn" class="tab-btn tab-active" onclick="showTab('join')">
-                        Join Session
+                        <i class="fas fa-sign-in-alt"></i> Join Session
                     </button>
                     <button id="tabCreateBtn" class="tab-btn" onclick="showTab('create')">
-                        Create Session
+                        <i class="fas fa-plus-circle"></i> Create Session
                     </button>
                 </div>
 
                 <!-- Join form -->
-                <div id="joinSectionDefault" class="form-body">
-                    <div class="field-group">
-                        <label class="field-label">Your Name</label>
-                        <input type="text" id="userName" placeholder="e.g. Alice"
-                               class="field-input" autocomplete="off">
+                <div id="joinSectionDefault" class="tab-form">
+                    <div class="form-field">
+                        <label class="form-label" for="userName">Your Name</label>
+                        <input type="text" id="userName" placeholder="Enter your name"
+                               class="form-input" autocomplete="off">
                     </div>
-                    <div class="field-group">
-                        <label class="field-label">Session ID</label>
+                    <div class="form-field">
+                        <label class="form-label" for="sessionIdInput">Session ID</label>
                         <input type="text" id="sessionIdInput" placeholder="e.g. ABC123"
-                               class="field-input field-mono" autocomplete="off">
+                               class="form-input form-input-mono" autocomplete="off">
                     </div>
-                    <button id="joinBtn" class="btn-primary-lg">
-                        <i class="fas fa-right-to-bracket"></i>
-                        Join Session
+                    <button id="joinBtn" class="btn-primary">
+                        <i class="fas fa-arrow-right"></i> Join Session
                     </button>
                 </div>
 
-                <!-- Create form (hidden initially) -->
-                <div id="createSection" class="form-body hidden">
-                    <div class="field-group">
-                        <label class="field-label">Your Name</label>
-                        <input type="text" id="userNameCreate" placeholder="e.g. Alice"
-                               class="field-input" autocomplete="off">
+                <!-- Create form (hidden by default) -->
+                <div id="createSection" class="tab-form hidden">
+                    <div class="form-field">
+                        <label class="form-label" for="userNameCreate">Your Name</label>
+                        <input type="text" id="userNameCreate" placeholder="Enter your name"
+                               class="form-input" autocomplete="off">
                     </div>
-                    <div class="field-group">
-                        <label class="field-label">Card Deck</label>
-                        <select id="deckType" class="field-input field-select">
-                            <option value="modified">Modified Fibonacci — 0, ½, 1, 2, 3, 5, 8, 13, 20, 40, 100</option>
-                            <option value="fibonacci">Fibonacci — 0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89</option>
-                            <option value="tshirt">T-Shirt Sizes — XS, S, M, L, XL, XXL</option>
-                            <option value="sequential">Sequential — 1 through 10</option>
+                    <div class="form-field">
+                        <label class="form-label" for="deckType">Card Deck</label>
+                        <select id="deckType" class="form-input form-select">
+                            <option value="modified">Modified Fibonacci (0, ½, 1, 2, 3, 5, 8, 13, 20, 40, 100)</option>
+                            <option value="fibonacci">Fibonacci (0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89)</option>
+                            <option value="tshirt">T-Shirt Sizes (XS, S, M, L, XL, XXL)</option>
+                            <option value="sequential">Sequential (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)</option>
                         </select>
                     </div>
-                    <button id="createSessionBtn" class="btn-primary-lg btn-create">
-                        <i class="fas fa-plus-circle"></i>
-                        Create Session
+                    <button id="createSessionBtn" class="btn-success">
+                        <i class="fas fa-plus-circle"></i> Create Session
                     </button>
                 </div>
-
-                <!-- Hidden toggle button kept for JS compatibility -->
-                <button id="toggleModeBtn" class="hidden" aria-hidden="true"></button>
             </div>
+
+            <!-- Hidden toggle kept for JS compatibility -->
+            <button id="toggleModeBtn" class="hidden" aria-hidden="true"></button>
         </div>
     </div>
 
 
     <!-- ============================================================
-         GAME VIEW — Header + sidebar + main content
+         GAME VIEW
          ============================================================ -->
-    <div id="gameView" class="game-view hidden">
+    <div id="gameView" class="hidden">
 
-        <!-- ── Top header bar ── -->
+        <!-- Header -->
         <header class="game-header">
             <div class="header-brand">
-                <i class="fas fa-layer-group header-icon"></i>
-                <span class="header-title">Vince's Planning Poker</span>
+                <i class="fas fa-layer-group"></i>
+                <span>Vince's Planning Poker</span>
             </div>
-
-            <div id="sessionInfo" class="session-info hidden">
+            <div id="sessionInfo" class="header-session hidden">
                 <span class="session-label">Session</span>
-                <span id="sessionId" class="session-id"></span>
-                <button id="copyLinkBtn" class="header-icon-btn" title="Copy session link">
-                    <i class="fas fa-copy"></i>
+                <span id="sessionId" class="session-code"></span>
+                <button id="copyLinkBtn" class="btn-copy">
+                    <i class="fas fa-copy"></i> Copy Link
                 </button>
             </div>
-
-            <button id="leaveSessionBtn" class="leave-btn">
-                <i class="fas fa-arrow-right-from-bracket"></i>
-                <span>Leave</span>
+            <button id="leaveSessionBtn" class="btn-leave">
+                <i class="fas fa-sign-out-alt"></i> Leave
             </button>
         </header>
 
-        <!-- ── Game body (sidebar + main) ── -->
+        <!-- Page body -->
         <div class="game-body">
 
-            <!-- Left sidebar — admin only, hidden for participants via JS -->
-            <aside id="adminPanel" class="admin-sidebar hidden">
-
-                <div class="sidebar-header">
-                    <span class="sidebar-title">Sprint Items</span>
-                    <button id="toggleAdminPanel" class="sidebar-toggle" title="Collapse sidebar">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                </div>
-
-                <!-- Add item input -->
-                <div class="sidebar-add-item">
-                    <input type="text" id="newItemInput" placeholder="Add a new item…"
-                           class="sidebar-input" autocomplete="off">
-                    <button id="addItemBtn" class="sidebar-add-btn" title="Add item">
-                        <i class="fas fa-plus"></i>
-                    </button>
-                </div>
-
-                <!-- Items list -->
-                <div id="itemsList" class="sidebar-items-list">
-                    <!-- Populated by JS -->
-                </div>
-
-                <!-- Admin action buttons -->
-                <div class="sidebar-controls">
-                    <button id="revealVotesBtn" class="control-btn control-reveal">
-                        <i class="fas fa-eye"></i>
-                        Reveal Votes
-                    </button>
-                    <div class="control-row">
-                        <button id="resetVotesBtn" class="control-btn control-secondary">
-                            <i class="fas fa-rotate-left"></i>
-                            Reset
-                        </button>
-                        <button id="nextItemBtn" class="control-btn control-secondary">
-                            Next
-                            <i class="fas fa-arrow-right"></i>
-                        </button>
-                    </div>
-                </div>
-            </aside>
-
-            <!-- Main content -->
-            <main class="game-main">
-
-                <!-- Current item + stats row -->
-                <section class="current-item-section">
-                    <div class="current-item-inner">
-                        <p class="section-eyebrow">Currently Voting On</p>
-                        <div id="votingItemDisplay">
-                            <p class="placeholder-text">Waiting for admin to select an item…</p>
-                        </div>
+            <!-- Current item + stats -->
+            <div class="page-card">
+                <div class="current-item-row">
+                    <div class="current-item-display" id="votingItemDisplay">
+                        <p class="current-item-placeholder">Select an item to start voting</p>
                     </div>
                     <div id="voteStats" class="vote-stats hidden">
-                        <p class="stats-heading">Results</p>
+                        <p class="vote-stats-heading">Results</p>
                         <div id="statsContent"></div>
                     </div>
-                </section>
+                </div>
+            </div>
 
-                <!-- Participants -->
-                <section class="participants-section">
-                    <p class="section-eyebrow">Participants</p>
-                    <div id="participantsGrid" class="participants-grid">
+            <!-- Participants -->
+            <div class="page-card">
+                <h3 class="card-heading">
+                    <i class="fas fa-users"></i> Participants
+                </h3>
+                <div id="participantsGrid" class="participants-grid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Admin panel (hidden for participants) -->
+            <div id="adminPanel" class="page-card admin-card hidden">
+                <div class="admin-header">
+                    <h3 class="card-heading">
+                        <i class="fas fa-list-check"></i> Backlog
+                    </h3>
+                    <button id="toggleAdminPanel" class="btn-icon-toggle">
+                        <i class="fas fa-chevron-up"></i>
+                    </button>
+                </div>
+                <div class="admin-body">
+                    <div class="add-item-row">
+                        <input type="text" id="newItemInput" placeholder="Enter item description"
+                               class="form-input add-item-input">
+                        <button id="addItemBtn" class="btn-add">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
+                    </div>
+                    <div id="itemsList" class="items-list">
                         <!-- Populated by JS -->
                     </div>
-                </section>
-
-                <!-- Voting cards -->
-                <section class="cards-section">
-                    <div class="cards-section-header">
-                        <p class="section-eyebrow">Your Vote</p>
-                        <div id="selectedCardDisplay" class="selected-badge hidden">
-                            <span class="selected-label">Selected:</span>
-                            <span id="selectedCard" class="selected-value"></span>
-                        </div>
+                    <div class="admin-actions">
+                        <button id="revealVotesBtn" class="btn-reveal">
+                            <i class="fas fa-eye"></i> Reveal Votes
+                        </button>
+                        <button id="resetVotesBtn" class="btn-reset">
+                            <i class="fas fa-rotate-left"></i> Reset Votes
+                        </button>
+                        <button id="nextItemBtn" class="btn-next">
+                            <i class="fas fa-arrow-right"></i> Next Item
+                        </button>
                     </div>
-                    <div id="cardsGrid" class="cards-grid">
-                        <!-- Generated by JS -->
-                    </div>
-                </section>
+                </div>
+            </div>
 
-            </main>
+            <!-- Voting cards -->
+            <div class="page-card">
+                <div class="cards-header">
+                    <h3 class="card-heading">
+                        <i class="fas fa-hand-pointer"></i> Your Vote
+                    </h3>
+                    <div id="selectedCardDisplay" class="selected-badge hidden">
+                        Your pick: <strong id="selectedCard"></strong>
+                    </div>
+                </div>
+                <div id="cardsGrid" class="cards-grid">
+                    <!-- Generated by JS -->
+                </div>
+            </div>
+
         </div>
     </div>
 
-    <!-- Toast container (JS appends toasts to body directly) -->
-    <div id="toastContainer" aria-live="polite"></div>
+    <!-- Toast container -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50"></div>
 
-    <!-- Tab switcher — replaces the JS toggleMode() pattern for the start view -->
+    <!-- Tab switcher (plain JS, no framework) -->
     <script>
         function showTab(tab) {
             const joinSection  = document.getElementById('joinSectionDefault');
             const createSection = document.getElementById('createSection');
             const tabJoin   = document.getElementById('tabJoinBtn');
             const tabCreate = document.getElementById('tabCreateBtn');
-
             if (tab === 'join') {
                 joinSection.classList.remove('hidden');
                 createSection.classList.add('hidden');
@@ -241,7 +208,6 @@
         }
     </script>
 
-    <!-- Firebase-enabled JavaScript (unchanged) -->
     <script src="script-firebase.js"></script>
 </body>
 </html>

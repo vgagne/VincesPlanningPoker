@@ -848,9 +848,11 @@ class PlanningPokerApp {
                 .then(() => {
                     this.showToast('Item updated successfully', 'success');
                     
-                    // If this is the current item, update the display
+                    // If this is the current item, push the updated description to
+                    // Firebase so all participants see the change immediately
                     if (this.currentItem && this.currentItem.id === itemId) {
                         this.currentItem.description = newDescription;
+                        this.firebaseManager.setCurrentItem({ ...this.currentItem });
                         this.updateCurrentItemDisplay();
                     }
                 })

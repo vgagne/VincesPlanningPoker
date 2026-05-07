@@ -7,189 +7,241 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
-    
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-database-compat.js"></script>
     <script src="firebase-config.js"></script>
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <!-- Header -->
-    <header class="bg-red-700 text-white shadow-lg">
-        <div class="container mx-auto px-4 py-4">
-            <div class="flex justify-between items-center">
-                <h1 class="text-2xl font-bold">
-                    <i class="fas fa-users mr-2"></i>Vince's Planning Poker
-                </h1>
-                <div id="sessionInfo" class="hidden">
-                    <span class="text-sm">Session: <span id="sessionId" class="font-mono bg-red-800 px-2 py-1 rounded"></span></span>
-                    <button id="copyLinkBtn" class="ml-4 bg-white text-red-700 px-3 py-1 rounded text-sm hover:bg-red-50 transition">
-                        <i class="fas fa-copy mr-1"></i>Copy Link
+<body>
+
+    <!-- ============================================================
+         START VIEW — Split panel: brand left, forms right
+         ============================================================ -->
+    <div id="startView" class="start-view">
+        <div class="start-card">
+
+            <!-- Brand panel -->
+            <div class="brand-panel">
+                <div class="brand-logo">
+                    <i class="fas fa-layer-group brand-icon"></i>
+                    <span class="brand-name">Planning Poker</span>
+                </div>
+                <div class="brand-body">
+                    <h1 class="brand-headline">Estimate together.<br/>Ship faster.</h1>
+                    <p class="brand-sub">Real-time planning poker for agile teams. No sign-up required.</p>
+                </div>
+                <ul class="brand-features">
+                    <li><i class="fas fa-bolt"></i> Real-time sync across all participants</li>
+                    <li><i class="fas fa-layer-group"></i> Fibonacci, T-shirt &amp; more deck types</li>
+                    <li><i class="fas fa-eye"></i> Simultaneous vote reveal</li>
+                    <li><i class="fas fa-chart-bar"></i> Mean, median &amp; mode statistics</li>
+                </ul>
+            </div>
+
+            <!-- Form panel -->
+            <div class="form-panel">
+                <h2 class="form-heading">Welcome</h2>
+                <p class="form-sub">Join a live session or start your own.</p>
+
+                <!-- Tabs -->
+                <div class="tab-bar">
+                    <button id="tabJoinBtn" class="tab-btn tab-active" onclick="showTab('join')">
+                        Join Session
+                    </button>
+                    <button id="tabCreateBtn" class="tab-btn" onclick="showTab('create')">
+                        Create Session
                     </button>
                 </div>
+
+                <!-- Join form -->
+                <div id="joinSectionDefault" class="form-body">
+                    <div class="field-group">
+                        <label class="field-label">Your Name</label>
+                        <input type="text" id="userName" placeholder="e.g. Alice"
+                               class="field-input" autocomplete="off">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Session ID</label>
+                        <input type="text" id="sessionIdInput" placeholder="e.g. ABC123"
+                               class="field-input field-mono" autocomplete="off">
+                    </div>
+                    <button id="joinBtn" class="btn-primary-lg">
+                        <i class="fas fa-right-to-bracket"></i>
+                        Join Session
+                    </button>
+                </div>
+
+                <!-- Create form (hidden initially) -->
+                <div id="createSection" class="form-body hidden">
+                    <div class="field-group">
+                        <label class="field-label">Your Name</label>
+                        <input type="text" id="userNameCreate" placeholder="e.g. Alice"
+                               class="field-input" autocomplete="off">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Card Deck</label>
+                        <select id="deckType" class="field-input field-select">
+                            <option value="modified">Modified Fibonacci — 0, ½, 1, 2, 3, 5, 8, 13, 20, 40, 100</option>
+                            <option value="fibonacci">Fibonacci — 0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89</option>
+                            <option value="tshirt">T-Shirt Sizes — XS, S, M, L, XL, XXL</option>
+                            <option value="sequential">Sequential — 1 through 10</option>
+                        </select>
+                    </div>
+                    <button id="createSessionBtn" class="btn-primary-lg btn-create">
+                        <i class="fas fa-plus-circle"></i>
+                        Create Session
+                    </button>
+                </div>
+
+                <!-- Hidden toggle button kept for JS compatibility -->
+                <button id="toggleModeBtn" class="hidden" aria-hidden="true"></button>
             </div>
         </div>
-    </header>
+    </div>
 
-    <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8">
-        <!-- Start Session View -->
-        <div id="startView" class="max-w-2xl mx-auto">
-            <div class="bg-white rounded-lg shadow-md p-8">
-                <h2 class="text-3xl font-bold text-center mb-8 text-gray-800">Welcome to Planning Poker</h2>
-                
-                <!-- Join Session Section (Default) -->
-                <div id="joinSectionDefault">
-                    <div class="space-y-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
-                            <input type="text" id="userName" placeholder="Enter your name" 
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-700 focus:border-transparent">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Session ID</label>
-                            <input type="text" id="sessionIdInput" placeholder="Enter session ID" 
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-700 focus:border-transparent">
-                        </div>
-                        
-                        <button id="joinBtn" class="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 px-6 rounded-lg transition">
-                            <i class="fas fa-sign-in-alt mr-2"></i>Join Session
+
+    <!-- ============================================================
+         GAME VIEW — Header + sidebar + main content
+         ============================================================ -->
+    <div id="gameView" class="game-view hidden">
+
+        <!-- ── Top header bar ── -->
+        <header class="game-header">
+            <div class="header-brand">
+                <i class="fas fa-layer-group header-icon"></i>
+                <span class="header-title">Vince's Planning Poker</span>
+            </div>
+
+            <div id="sessionInfo" class="session-info hidden">
+                <span class="session-label">Session</span>
+                <span id="sessionId" class="session-id"></span>
+                <button id="copyLinkBtn" class="header-icon-btn" title="Copy session link">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+
+            <button id="leaveSessionBtn" class="leave-btn">
+                <i class="fas fa-arrow-right-from-bracket"></i>
+                <span>Leave</span>
+            </button>
+        </header>
+
+        <!-- ── Game body (sidebar + main) ── -->
+        <div class="game-body">
+
+            <!-- Left sidebar — admin only, hidden for participants via JS -->
+            <aside id="adminPanel" class="admin-sidebar hidden">
+
+                <div class="sidebar-header">
+                    <span class="sidebar-title">Sprint Items</span>
+                    <button id="toggleAdminPanel" class="sidebar-toggle" title="Collapse sidebar">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                </div>
+
+                <!-- Add item input -->
+                <div class="sidebar-add-item">
+                    <input type="text" id="newItemInput" placeholder="Add a new item…"
+                           class="sidebar-input" autocomplete="off">
+                    <button id="addItemBtn" class="sidebar-add-btn" title="Add item">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+
+                <!-- Items list -->
+                <div id="itemsList" class="sidebar-items-list">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- Admin action buttons -->
+                <div class="sidebar-controls">
+                    <button id="revealVotesBtn" class="control-btn control-reveal">
+                        <i class="fas fa-eye"></i>
+                        Reveal Votes
+                    </button>
+                    <div class="control-row">
+                        <button id="resetVotesBtn" class="control-btn control-secondary">
+                            <i class="fas fa-rotate-left"></i>
+                            Reset
+                        </button>
+                        <button id="nextItemBtn" class="control-btn control-secondary">
+                            Next
+                            <i class="fas fa-arrow-right"></i>
                         </button>
                     </div>
                 </div>
-                
-                <!-- Create Session Section (Hidden by default) -->
-                <div id="createSection" class="hidden">
-                    <div class="space-y-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
-                            <input type="text" id="userNameCreate" placeholder="Enter your name" 
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-700 focus:border-transparent">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Card Deck Type</label>
-                            <select id="deckType" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-700 focus:border-transparent">
-                                <option value="modified" selected>Modified Fibonacci (0, ½, 1, 2, 3, 5, 8, 13, 20, 40, 100)</option>
-                                <option value="fibonacci">Fibonacci (0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89)</option>
-                                <option value="tshirt">T-Shirt Sizes (XS, S, M, L, XL, XXL)</option>
-                                <option value="sequential">Sequential (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)</option>
-                            </select>
-                        </div>
-                        
-                        <button id="createSessionBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition">
-                            <i class="fas fa-plus-circle mr-2"></i>Create Session
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Toggle Button -->
-                <div class="mt-6 text-center">
-                    <button id="toggleModeBtn" class="text-red-700 hover:text-red-800 font-medium transition">
-                        <i class="fas fa-exchange-alt mr-2"></i>Want to create a session instead?
-                    </button>
-                </div>
-            </div>
-        </div>
+            </aside>
 
-        <!-- Game View -->
-        <div id="gameView" class="hidden">
-            <!-- Header with Current Item and Stats -->
-            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                <div class="flex justify-between items-center">
-                    <div class="flex-1">
+            <!-- Main content -->
+            <main class="game-main">
+
+                <!-- Current item + stats row -->
+                <section class="current-item-section">
+                    <div class="current-item-inner">
+                        <p class="section-eyebrow">Currently Voting On</p>
                         <div id="votingItemDisplay">
-                            <p class="text-lg font-semibold text-red-800">Select an item to start voting</p>
+                            <p class="placeholder-text">Waiting for admin to select an item…</p>
                         </div>
                     </div>
-                    <div id="voteStats" class="hidden bg-red-50 border border-red-200 rounded-lg p-4">
-                        <!-- Stats will be populated by JavaScript -->
+                    <div id="voteStats" class="vote-stats hidden">
+                        <p class="stats-heading">Results</p>
+                        <div id="statsContent"></div>
                     </div>
-                </div>
-            </div>
+                </section>
 
-            <!-- Participants Section (Main Focus) -->
-            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                <h3 class="text-xl font-bold text-gray-800 mb-4">
-                    <i class="fas fa-users mr-2 text-red-700"></i>Participants
-                </h3>
-                <div id="participantsGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    <!-- Participants will be added here dynamically -->
-                </div>
-            </div>
+                <!-- Participants -->
+                <section class="participants-section">
+                    <p class="section-eyebrow">Participants</p>
+                    <div id="participantsGrid" class="participants-grid">
+                        <!-- Populated by JS -->
+                    </div>
+                </section>
 
-            <!-- Admin Panel -->
-            <div id="adminPanel" class="bg-white rounded-lg shadow-md p-6 mb-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-bold text-gray-800">
-                        <i class="fas fa-cog mr-2 text-red-700"></i>Admin Panel
-                    </h3>
-                    <button id="toggleAdminPanel" class="text-red-700 hover:text-red-800">
-                        <i class="fas fa-chevron-up"></i>
-                    </button>
-                </div>
-                
-                <div id="adminPanelContent">
-                    <!-- Add Item Section -->
-                    <div class="mb-6">
-                        <h4 class="text-lg font-semibold text-gray-700 mb-3">Add New Item</h4>
-                        <div class="flex space-x-2">
-                            <input type="text" id="newItemInput" placeholder="Enter item description" 
-                                   class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-700 focus:border-transparent">
-                            <button id="addItemBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition">
-                                <i class="fas fa-plus mr-2"></i>Add
-                            </button>
+                <!-- Voting cards -->
+                <section class="cards-section">
+                    <div class="cards-section-header">
+                        <p class="section-eyebrow">Your Vote</p>
+                        <div id="selectedCardDisplay" class="selected-badge hidden">
+                            <span class="selected-label">Selected:</span>
+                            <span id="selectedCard" class="selected-value"></span>
                         </div>
                     </div>
-
-                    <!-- Items List -->
-                    <div class="mb-6">
-                        <h4 class="text-lg font-semibold text-gray-700 mb-3">Items</h4>
-                        <div id="itemsList" class="space-y-2 max-h-40 overflow-y-auto">
-                            <!-- Items will be added here dynamically -->
-                        </div>
+                    <div id="cardsGrid" class="cards-grid">
+                        <!-- Generated by JS -->
                     </div>
+                </section>
 
-                    <!-- Voting Controls -->
-                    <div class="flex space-x-2">
-                        <button id="revealVotesBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">
-                            <i class="fas fa-eye mr-2"></i>Reveal Votes
-                        </button>
-                        <button id="resetVotesBtn" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-lg transition">
-                            <i class="fas fa-redo mr-2"></i>Reset Votes
-                        </button>
-                        <button id="nextItemBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition">
-                            <i class="fas fa-arrow-right mr-2"></i>Next Item
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Voting Cards Section (Bottom) -->
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h3 class="text-xl font-bold text-gray-800 mb-4">
-                    <i class="fas fa-layer-group mr-2 text-red-700"></i>Select Your Vote
-                </h3>
-                
-                <!-- Selected Card Display -->
-                <div id="selectedCardDisplay" class="hidden mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <p class="text-sm text-red-600 font-medium">Your selection:</p>
-                    <p id="selectedCard" class="text-2xl font-bold text-red-800"></p>
-                </div>
-                
-                <!-- Cards Grid -->
-                <div id="cardsGrid" class="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-7 gap-3">
-                    <!-- Cards will be generated dynamically -->
-                </div>
-            </div>
+            </main>
         </div>
-    </main>
+    </div>
 
-    <!-- Toast Container -->
-    <div id="toastContainer" class="fixed top-4 right-4 z-50"></div>
+    <!-- Toast container (JS appends toasts to body directly) -->
+    <div id="toastContainer" aria-live="polite"></div>
 
-    <!-- Firebase-enabled JavaScript -->
+    <!-- Tab switcher — replaces the JS toggleMode() pattern for the start view -->
+    <script>
+        function showTab(tab) {
+            const joinSection  = document.getElementById('joinSectionDefault');
+            const createSection = document.getElementById('createSection');
+            const tabJoin   = document.getElementById('tabJoinBtn');
+            const tabCreate = document.getElementById('tabCreateBtn');
+
+            if (tab === 'join') {
+                joinSection.classList.remove('hidden');
+                createSection.classList.add('hidden');
+                tabJoin.classList.add('tab-active');
+                tabCreate.classList.remove('tab-active');
+            } else {
+                joinSection.classList.add('hidden');
+                createSection.classList.remove('hidden');
+                tabJoin.classList.remove('tab-active');
+                tabCreate.classList.add('tab-active');
+            }
+        }
+    </script>
+
+    <!-- Firebase-enabled JavaScript (unchanged) -->
     <script src="script-firebase.js"></script>
 </body>
 </html>

@@ -23,6 +23,15 @@ class PlanningPokerApp {
             tshirt: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
             sequential: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
         };
+
+        this.tshirtTimeLabels = {
+            'XS': '< 1 week',
+            'S': '1-2 weeks',
+            'M': '3-5 weeks',
+            'L': '6-11 weeks',
+            'XL': '12-24 weeks',
+            'XXL': '25+ weeks'
+        };
         
         this.initializeEventListeners();
         this.checkUrlForSession();
@@ -298,10 +307,14 @@ class PlanningPokerApp {
                 cardElement.classList.add('pass');
             }
             cardElement.dataset.value = card;
+            const timeLabel = this.tshirtTimeLabels[card]
+                ? `<div class="card-time-label">(${this.tshirtTimeLabels[card]})</div>`
+                : '';
             cardElement.innerHTML = `
                 <div class="card-value">${card}</div>
+                ${timeLabel}
             `;
-            
+
             cardElement.addEventListener('click', () => this.selectCard(card, cardElement));
             cardsGrid.appendChild(cardElement);
         });
@@ -452,7 +465,10 @@ class PlanningPokerApp {
             let voteCardHtml = '';
             if (this.votesRevealed && this.votes.has(name)) {
                 const voteValue = this.votes.get(name);
-                voteCardHtml = `<div class="vote-card">${voteValue}</div>`;
+                const timeLabel = this.tshirtTimeLabels[voteValue]
+                    ? `<div class="vote-time-label">(${this.tshirtTimeLabels[voteValue]})</div>`
+                    : '';
+                voteCardHtml = `<div class="vote-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">${voteValue}${timeLabel}</div>`;
             } else if (participant.hasVoted) {
                 voteCardHtml = `<div class="vote-card hidden">?</div>`;
             } else {

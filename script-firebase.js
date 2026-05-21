@@ -21,6 +21,15 @@ class PlanningPokerApp {
             tshirt: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
             sequential: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
         };
+
+        this.tshirtTimeLabels = {
+            'XS': '< 1 week',
+            'S': '1-2 weeks',
+            'M': '3-5 weeks',
+            'L': '6-11 weeks',
+            'XL': '12-24 weeks',
+            'XXL': '25+ weeks'
+        };
         
         this.initializeEventListeners();
         this.restoreSessionFromStorage();
@@ -593,15 +602,19 @@ class PlanningPokerApp {
                 cardElement.classList.add('pass');
             }
             cardElement.dataset.value = card;
+            const timeLabel = this.tshirtTimeLabels[card]
+                ? `<div class="card-time-label">(${this.tshirtTimeLabels[card]})</div>`
+                : '';
             cardElement.innerHTML = `
                 <div class="card-value">${card}</div>
+                ${timeLabel}
             `;
-            
+
             cardElement.addEventListener('click', () => this.selectCard(card, cardElement));
             cardsGrid.appendChild(cardElement);
         });
     }
-    
+
     selectCard(value, element) {
         if (this.votesRevealed) {
             this.showToast('Voting has ended for this item', 'error');
@@ -907,8 +920,11 @@ class PlanningPokerApp {
             if (this.votesRevealed && voteValue) {
                 // REVEALED STATE: Light grey background, green text
                 const isPass = voteValue === 'Pass';
-                cardStyle = `background: linear-gradient(145deg, #e9ecef, #dee2e6); border: 2px solid #6c757d; color: ${isPass ? '#6c757d' : '#28a745'}; font-size: 1.5rem; font-weight: 900; width: 80px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); margin: 0 auto; font-style: ${isPass ? 'italic' : 'normal'};`;
-                cardContent = voteValue;
+                const timeLabel = this.tshirtTimeLabels[voteValue]
+                    ? `<div class="vote-time-label">(${this.tshirtTimeLabels[voteValue]})</div>`
+                    : '';
+                cardStyle = `background: linear-gradient(145deg, #e9ecef, #dee2e6); border: 2px solid #6c757d; color: ${isPass ? '#6c757d' : '#28a745'}; font-size: 1.5rem; font-weight: 900; width: 80px; min-height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); margin: 0 auto; font-style: ${isPass ? 'italic' : 'normal'};`;
+                cardContent = voteValue + timeLabel;
             } else if (hasVoted) {
                 // VOTED (hidden): Dark grey with green checkmark
                 cardStyle = `background: linear-gradient(145deg, #6c757d, #495057); border: 2px solid #495057; color: #28a745; width: 80px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.15); margin: 0 auto; font-size: 1.5rem; font-weight: 900;`;

@@ -162,6 +162,10 @@ class PlanningPokerApp {
         document.getElementById('newItemInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.addItem();
         });
+
+        document.getElementById('activeDeckType').addEventListener('change', (e) => {
+            this.changeActiveDeckType(e.target.value);
+        });
     }
     
     toggleMode() {
@@ -293,6 +297,7 @@ class PlanningPokerApp {
         // Show/hide admin panel
         if (this.isAdmin) {
             document.getElementById('adminPanel').classList.remove('hidden');
+            document.getElementById('activeDeckType').value = this.deckType;
         } else {
             document.getElementById('adminPanel').classList.add('hidden');
         }
@@ -417,6 +422,9 @@ class PlanningPokerApp {
                 this.deckType = deckType;
                 this.generateCards();
                 this.saveSessionToStorage();
+            }
+            if (this.isAdmin) {
+                document.getElementById('activeDeckType').value = this.deckType;
             }
             console.log('🃏 Deck type loaded:', this.deckType);
         });
@@ -563,6 +571,22 @@ class PlanningPokerApp {
             console.log('👁️ Votes revealed updated:', this.votesRevealed);
         });
         
+        // Listen to deck type changes (admin can change mid-session)
+        this.firebaseManager.sessionRef.child('deckType').on('value', (snapshot) => {
+            const deckType = snapshot.val();
+            if (deckType && deckType !== this.deckType) {
+                this.deckType = deckType;
+                this.selectedCard = null;
+                document.getElementById('selectedCardDisplay').classList.add('hidden');
+                document.getElementById('activeDeckType').value = deckType;
+                this.generateCards();
+                this.saveSessionToStorage();
+                if (!this.isAdmin) {
+                    this.showToast(`Deck changed to ${deckType}`, 'info');
+                }
+            }
+        });
+
         // Listen to session ended status (admin left)
         this.firebaseManager.onSessionChange((snapshot) => {
             const sessionData = snapshot.val();
@@ -613,6 +637,28 @@ class PlanningPokerApp {
             cardElement.addEventListener('click', () => this.selectCard(card, cardElement));
             cardsGrid.appendChild(cardElement);
         });
+    }
+
+    changeActiveDeckType(newDeckType) {
+        if (!this.isAdmin) return;
+        if (newDeckType === this.deckType) return;
+
+        this.deckType = newDeckType;
+
+        if (this.firebaseManager) {
+            this.firebaseManager.updateSession({ deckType: newDeckType });
+            this.firebaseManager.setVotesRevealed(false);
+            this.participants.forEach((participant, name) => {
+                this.firebaseManager.updateParticipant(name, { hasVoted: false });
+                this.firebaseManager.removeVote(name);
+            });
+        }
+
+        this.selectedCard = null;
+        document.getElementById('selectedCardDisplay').classList.add('hidden');
+        this.generateCards();
+        this.saveSessionToStorage();
+        this.showToast(`Deck changed to ${newDeckType}`, 'success');
     }
 
     selectCard(value, element) {

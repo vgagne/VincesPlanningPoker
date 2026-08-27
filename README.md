@@ -11,6 +11,7 @@ A modern, web-based planning poker application for agile teams to estimate story
   - Modified Fibonacci (0, ½, 1, 2, 3, 5, 8, 13, 20, 40, 100)
   - T-Shirt Sizes (XS, S, M, L, XL, XXL)
   - Sequential (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+  - Yes/No/Pass (Yes, No, Pass)
 - **Real-time Voting**: Participants can vote on items with visual feedback
 - **Vote Reveal**: Admin can reveal all votes simultaneously to avoid bias
 - **Item Management**: Add, select, and manage voting items

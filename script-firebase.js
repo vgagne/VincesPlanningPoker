@@ -19,7 +19,8 @@ class PlanningPokerApp {
             modified: ['0', '½', '1', '2', '3', '5', '8', '13', '20', '40', '100'],
             fibonacci: ['0', '1', '2', '3', '5', '8', '13', '21', '34', '55', '89'],
             tshirt: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-            sequential: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+            sequential: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+            yesno: ['Yes', 'No']
         };
 
         this.tshirtTimeLabels = {
@@ -1021,13 +1022,19 @@ class PlanningPokerApp {
     
     calculateAndDisplayMode() {
         const voteValues = Array.from(this.votes.values());
+
+        if (this.deckType === 'yesno') {
+            this.displayYesNoPassStats(voteValues);
+            return;
+        }
+
         const validVotes = voteValues.filter(vote => vote !== 'Pass');
-        
+
         if (validVotes.length === 0) {
             document.getElementById('voteStats').classList.add('hidden');
             return;
         }
-        
+
         // Convert votes to numbers for calculation
         const numericVotes = validVotes.map(vote => {
             if (vote === '½') return 0.5;
@@ -1092,7 +1099,54 @@ class PlanningPokerApp {
             </div>
         `;
     }
-    
+
+    displayYesNoPassStats(voteValues) {
+        const totalVotes = voteValues.length;
+
+        if (totalVotes === 0) {
+            document.getElementById('voteStats').classList.add('hidden');
+            return;
+        }
+
+        const yesCount = voteValues.filter(vote => vote === 'Yes').length;
+        const noCount = voteValues.filter(vote => vote === 'No').length;
+        const passCount = voteValues.filter(vote => vote === 'Pass').length;
+
+        const yesPercent = ((yesCount / totalVotes) * 100).toFixed(1);
+        const noPercent = ((noCount / totalVotes) * 100).toFixed(1);
+
+        let majorityOutcome;
+        if (yesCount > noCount) {
+            majorityOutcome = 'Yes';
+        } else if (noCount > yesCount) {
+            majorityOutcome = 'No';
+        } else {
+            majorityOutcome = 'Tie';
+        }
+
+        document.getElementById('voteStats').classList.remove('hidden');
+        document.getElementById('statsContent').innerHTML = `
+            <div class="stats-content">
+                <div class="stat-item mb-2">
+                    <div class="text-sm text-gray-600">Total Yes:</div>
+                    <div class="text-lg font-bold text-red-700">${yesCount} (${yesPercent}%)</div>
+                </div>
+                <div class="stat-item mb-2">
+                    <div class="text-sm text-gray-600">Total No:</div>
+                    <div class="text-lg font-bold text-red-700">${noCount} (${noPercent}%)</div>
+                </div>
+                <div class="stat-item mb-2">
+                    <div class="text-sm text-gray-600">Pass:</div>
+                    <div class="text-lg font-bold text-red-700">${passCount}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="text-sm text-gray-600">Majority Outcome:</div>
+                    <div class="text-lg font-bold text-red-700">${majorityOutcome}</div>
+                </div>
+            </div>
+        `;
+    }
+
     resetVotes() {
         if (!this.isAdmin) {
             this.showToast('Only admin can reset votes', 'error');
